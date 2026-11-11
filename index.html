@@ -1,0 +1,1163 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Asistente de Trimado</title>
+<meta name="description" content="Asistente de trimado de velas: trimado por rumbo, lanitas, polar estimada y checklist hasta los rizos.">
+<style>*,*::before,*::after{box-sizing:border-box}html{color-scheme:light}body{margin:0;font:14px system-ui,-apple-system,"Segoe UI",sans-serif}img{max-width:100%}[hidden]{display:none!important}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: mesa de cartas. Instrumento de viento oscuro (pantalla de a bordo) sobre papel de carta; secciones separadas por filetes, no tarjetas. Magenta de carta náutica de día, rojo de iluminación nocturna de noche. Babor rojo / estribor verde. */
+:root{
+  --bg:#F3F5F4; --surface:#FFFFFF; --ink:#0F2230; --muted:#5A6B72; --line:#D6DEE0; --line-strong:#A9B8BD;
+  --sea:#1F5F7F; --sea-soft:#E2ECF0; --accent:#A8195C; --accent-soft:#F6E2EB;
+  --port:#C0302B; --stbd:#17804B; --warn:#9C640F;
+  --inst-bg:#0D161B; --inst-face:#121D23; --inst-ink:#E4ECEE; --inst-muted:#8C9CA2; --inst-line:#26363F; --inst-accent:#F2578F; --inst-sea:#7DB4CF; --inst-sea-soft:#192A33;
+  --f-display:"IBM Plex Sans Condensed","Arial Narrow",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]):not([data-mode="light"]){
+  --bg:#080C0F; --surface:#0F171C; --ink:#D3DCDF; --muted:#7E8D93; --line:#1D2930; --line-strong:#33444D;
+  --sea:#6AA3BF; --sea-soft:#12222A; --accent:#FF5A4E; --accent-soft:#361412;
+  --port:#EE625A; --stbd:#3CBD7C; --warn:#DDA247;
+  --inst-bg:#0B1115; --inst-face:#0F171C; --inst-ink:#D3DCDF; --inst-muted:#7E8D93; --inst-line:#22313A; --inst-accent:#FF5A4E; --inst-sea:#6AA3BF; --inst-sea-soft:#14242C; color-scheme:dark}}
+:root[data-theme="dark"]:not([data-mode="light"]),:root[data-mode="dark"]{
+  --bg:#080C0F; --surface:#0F171C; --ink:#D3DCDF; --muted:#7E8D93; --line:#1D2930; --line-strong:#33444D;
+  --sea:#6AA3BF; --sea-soft:#12222A; --accent:#FF5A4E; --accent-soft:#361412;
+  --port:#EE625A; --stbd:#3CBD7C; --warn:#DDA247;
+  --inst-bg:#0B1115; --inst-face:#0F171C; --inst-ink:#D3DCDF; --inst-muted:#7E8D93; --inst-line:#22313A; --inst-accent:#FF5A4E; --inst-sea:#6AA3BF; --inst-sea-soft:#14242C; color-scheme:dark}
+:root[data-mode="light"]{color-scheme:light}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:14px 40px;transition:background-color .2s}
+.wrap{max-width:1200px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+h1,h2,h3{font-family:var(--f-display);margin:0;text-wrap:balance}
+button{font-family:inherit}
+.hint{font-size:13px;color:var(--muted);margin:0}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* Barra superior */
+.appbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.mark{width:34px;height:34px;flex:none}
+.mark .m1{fill:var(--ink)} .mark .m2{fill:var(--accent)} .mark .m3{stroke:var(--ink);stroke-width:1.6;fill:none}
+.brand h1{font-weight:600;font-size:23px;line-height:1.05;letter-spacing:-.005em}
+.ver{display:block;font:500 11.5px/1.3 var(--f-mono);color:var(--muted);letter-spacing:.02em}
+.prefs{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-left:auto;justify-content:flex-end}
+.seg{display:inline-flex;border:1px solid var(--line-strong);border-radius:3px;overflow:hidden;background:var(--surface)}
+.seg button{appearance:none;border:0;background:transparent;color:var(--muted);font:600 13px/1 var(--f-body);padding:8px 11px;cursor:pointer;min-height:34px}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.seg.small button{padding:7px 9px;font-size:12px}
+.themes svg{width:14px;height:14px;display:block;fill:none;stroke:currentColor;stroke-width:1.8}
+.themes button{display:inline-flex;align-items:center;gap:6px}
+
+/* Pestañas */
+.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line-strong)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.tablist{display:flex;gap:22px;flex-wrap:wrap}
+.tablist a{font:600 15.5px/1 var(--f-display);color:var(--muted);text-decoration:none;padding:14px 0 12px;border-bottom:2px solid transparent;margin-bottom:-1px}
+.tablist a[aria-current="page"]{color:var(--ink);border-bottom-color:var(--accent)}
+.tablist a:hover{color:var(--ink)}
+.boatbar{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);min-width:0;padding-block:6px}
+.boatbar select{font:500 14px var(--f-body);padding:6px 8px;border:1px solid var(--line-strong);border-radius:3px;background:var(--surface);color:var(--ink);max-width:240px;min-width:0}
+
+/* Rejilla y secciones */
+.grid{display:grid;grid-template-columns:1fr;gap:28px;align-items:start}
+@media (min-width:980px){.grid{grid-template-columns:400px minmax(0,1fr);gap:36px}}
+.col{display:flex;flex-direction:column;gap:26px;min-width:0}
+section.panel{border-top:1px solid var(--line-strong);padding-top:12px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.panel-h{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.panel-h h2{font-weight:600;font-size:20px;letter-spacing:-.005em}
+.panel-h .hint{font-size:12.5px}
+
+/* Instrumento (siempre oscuro) */
+section.panel.instrument{--ink:var(--inst-ink);--muted:var(--inst-muted);--line:var(--inst-line);--line-strong:var(--inst-line);--surface:var(--inst-face);--accent:var(--inst-accent);--sea:var(--inst-sea);--sea-soft:var(--inst-sea-soft);--bg:var(--inst-bg);
+  background:var(--inst-bg);color:var(--ink);border:0;border-radius:8px;padding:16px 18px 18px;border:1px solid var(--inst-line);box-shadow:0 1px 0 rgba(0,0,0,.04),0 10px 30px -18px rgba(5,20,30,.55)}
+.instrument .panel-h h2{font:500 12px/1 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.instrument .seg{background:transparent}
+
+/* Ficha y equipo */
+.cfg-group{display:flex;flex-direction:column;gap:8px}
+.cfg-group h3{font:600 13px/1.2 var(--f-display);color:var(--muted)}
+.toggles{display:flex;flex-wrap:wrap;gap:6px}
+.tg{appearance:none;border:1px solid var(--line-strong);background:var(--surface);color:var(--muted);font:500 14px/1.1 var(--f-body);padding:8px 11px 8px 9px;border-radius:3px;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+.tg::before{content:"";width:13px;height:13px;border-radius:2px;border:1.5px solid var(--line-strong);flex:none;background:transparent}
+.tg[aria-pressed="true"]{color:var(--ink);border-color:var(--sea)}
+.tg[aria-pressed="true"]::before{border-color:var(--sea);background:var(--sea) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 6.2 5 8.6 9.6 3.6' fill='none' stroke='white' stroke-width='1.8'/%3E%3C/svg%3E") center/11px no-repeat}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+#rumbos .tg::before{border-radius:50%}
+#rumbos .tg[aria-pressed="true"]::before{background:radial-gradient(var(--sea) 0 3px,transparent 3.5px);border-color:var(--sea)}
+.legend{font-size:12.5px;color:var(--muted);border-top:1px solid var(--line);padding-top:10px;margin:0}
+.legend b{color:var(--ink);font-weight:600}
+.ficha{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.field{display:flex;flex-direction:column;gap:4px;min-width:0}
+.field label{font-size:12.5px;font-weight:500;color:var(--muted)}
+.field input{font:500 16px var(--f-body);padding:9px 10px;border:1px solid var(--line-strong);border-radius:3px;background:var(--surface);color:var(--ink);width:100%;min-width:0}
+.field input[type=number]{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.field.full{grid-column:1/-1}
+.warn{color:var(--warn);font-size:13px;margin:0}
+
+/* Dial y lectura */
+.dial-wrap{display:flex;flex-direction:column;align-items:center;gap:8px}
+#dial{width:100%;max-width:330px;aspect-ratio:1;touch-action:none;cursor:grab;user-select:none}
+#dial:active{cursor:grabbing}
+.readout{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;justify-content:center}
+.big{font:500 50px/1 var(--f-mono);font-variant-numeric:tabular-nums;letter-spacing:-.03em}
+.zone{font:600 24px/1 var(--f-display)}
+.amura{font:600 11.5px/1 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;padding:5px 7px;border-radius:2px;color:#fff}
+.amura.estribor{background:var(--stbd)} .amura.babor{background:var(--port)}
+.zone-d{font-size:13.5px;color:var(--muted);text-align:center;max-width:44ch;margin:0}
+.slider{display:grid;grid-template-columns:84px 1fr 66px;gap:10px;align-items:center}
+.slider label{font-weight:500;font-size:13.5px;color:var(--muted)}
+.slider output{font:500 20px var(--f-mono);font-variant-numeric:tabular-nums;text-align:right;color:var(--ink)}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.instrument .hint{color:var(--muted)}
+
+/* Trimado */
+.trim-grid{display:grid;grid-template-columns:1fr;gap:20px}
+@media (min-width:700px){.trim-grid{grid-template-columns:1fr 1fr;gap:28px}}
+.sail h3{font-weight:600;font-size:16px;border-bottom:1px solid var(--ink);padding-bottom:6px}
+.sail ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.sail li{display:grid;grid-template-columns:104px 1fr;gap:12px;padding:9px 0;border-bottom:1px solid var(--line)}
+.sail li:last-child{border-bottom:0}
+.ctl{font-weight:600;font-size:14px;display:flex;flex-direction:column;gap:2px}
+.part{font:500 10.5px/1.2 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.val{font-size:14px;min-width:0}
+.val .alt{display:block;color:var(--warn);font-size:13px;margin-top:3px}
+.reefbox{display:flex;gap:14px;align-items:baseline;flex-wrap:wrap;padding:10px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);font-size:14px}
+.reefbox strong{font:600 13px/1.2 var(--f-mono);letter-spacing:.04em;text-transform:uppercase;color:var(--accent);white-space:nowrap}
+.reefbox span{flex:1 1 240px;min-width:0}
+
+/* Polar */
+.kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+.kpi{padding:2px 10px;display:flex;flex-direction:column;gap:3px;min-width:0;border-left:1px solid var(--line)}
+.kpi:first-child{padding-left:0;border-left:0}
+.kpi span{font-size:12px;color:var(--muted)}
+.kpi b{font:500 22px/1.1 var(--f-mono);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.kpi small{font-size:11.5px;color:var(--muted);line-height:1.35}
+#polar{width:100%;max-width:340px;display:block;margin:0 auto}
+.p-ring{fill:none;stroke:var(--line);stroke-width:1}
+.p-ax{stroke:var(--line);stroke-width:1}
+.p-lbl{fill:var(--muted);font:500 10.5px var(--f-mono)}
+.p-curve{fill:none;stroke:var(--sea);stroke-width:1.7}
+.p-cur{fill:none;stroke:var(--accent);stroke-width:2.2;stroke-dasharray:5 3}
+.p-dot{fill:var(--accent);stroke:var(--bg);stroke-width:2}
+.p-opt{stroke:var(--ink);stroke-width:1;stroke-dasharray:2 3}
+.perf{display:flex;flex-direction:column;gap:8px}
+.perf-row{display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap}
+.meter{height:6px;background:var(--line);border-radius:3px;overflow:hidden;position:relative}
+.meter i{position:absolute;top:0;bottom:0;left:0;background:var(--stbd);border-radius:3px}
+.meter.mid i{background:var(--warn)} .meter.low i{background:var(--accent)}
+.linkbtn{appearance:none;border:0;background:none;color:var(--accent);font:600 13.5px var(--f-body);padding:4px 0;cursor:pointer;align-self:flex-start;text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px}
+
+/* Lanitas */
+.tt-wrap{display:grid;grid-template-columns:1fr;gap:22px}
+@media (min-width:760px){.tt-wrap{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
+.tt-col{display:flex;flex-direction:column;gap:16px;min-width:0}
+.tt-grid{display:grid;gap:6px;align-items:center}
+.tt-grid.g{grid-template-columns:56px minmax(0,1fr) minmax(0,1fr)}
+.tt-grid.m{grid-template-columns:56px minmax(0,1fr)}
+.tt-h{font:500 10.5px/1.2 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.tt-r{font-size:13px;font-weight:500;color:var(--muted)}
+.tt{appearance:none;border:1px solid var(--line-strong);background:var(--surface);border-radius:3px;padding:7px 8px;cursor:pointer;display:flex;align-items:center;gap:8px;color:var(--ink);font:500 13px var(--f-body);min-width:0;text-align:left}
+.tt svg{width:36px;height:14px;flex:none}
+.tt path{fill:none;stroke-width:2.2;stroke-linecap:round}
+.tt[data-s="ok"] path{stroke:var(--stbd)}
+.tt[data-s="bad"]{border-color:var(--accent);color:var(--accent)}
+.tt[data-s="bad"] path{stroke:var(--accent)}
+.tt-out{display:flex;flex-direction:column;gap:12px;min-width:0}
+.tt-out ol{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:8px;font-size:14px}
+.tt-out .good{color:var(--stbd);font-weight:600}
+.subh{font:600 15px/1.3 var(--f-display);margin:0 0 8px}
+
+/* ¿Qué te pasa? */
+.ask{display:flex;flex-direction:column;gap:8px}
+.ask-row{display:flex;gap:8px;flex-wrap:wrap}
+#q{flex:1 1 260px;min-width:0;font:400 15px/1.4 var(--f-body);padding:11px 12px;border:1px solid var(--line-strong);border-radius:3px;background:var(--surface);color:var(--ink)}
+.btn{appearance:none;border:1px solid var(--ink);background:var(--ink);color:var(--bg);font:600 14px/1 var(--f-body);padding:12px 18px;border-radius:3px;cursor:pointer}
+.btn:hover{opacity:.9}
+.btn.ghost{background:transparent;color:var(--ink);border-color:var(--line-strong)}
+.examples{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:13px;color:var(--muted);align-items:baseline}
+.ex{appearance:none;border:0;background:none;color:var(--sea);font:400 13px/1.35 var(--f-body);text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px;cursor:pointer;padding:2px 0;text-align:left}
+.chips{display:grid;grid-template-columns:1fr;column-gap:24px}
+@media (min-width:560px){.chips{grid-template-columns:1fr 1fr}}
+.chip{appearance:none;border:0;border-bottom:1px solid var(--line);background:none;color:var(--ink);font:400 14.5px/1.3 var(--f-body);padding:10px 2px;cursor:pointer;text-align:left;display:flex;gap:10px;align-items:center}
+.chip::before{content:"";width:12px;height:12px;border-radius:50%;border:1.5px solid var(--line-strong);flex:none}
+.chip[aria-pressed="true"]{font-weight:600}
+.chip[aria-pressed="true"]::before{border-color:var(--accent);background:radial-gradient(var(--accent) 0 3.5px,transparent 4px)}
+.understood{font-size:13.5px;padding:2px 0 2px 12px;border-left:2px solid var(--sea)}
+.understood.err{border-left-color:var(--warn)}
+.understood b{font-weight:600}
+.understood:empty{display:none}
+.cl-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;margin-top:6px}
+.cl-head h3{font-weight:600;font-size:21px}
+.progress{font:500 13px var(--f-mono);color:var(--muted);font-variant-numeric:tabular-nums}
+.why{font-size:14px;margin:0;color:var(--muted);max-width:68ch}
+ol.checklist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;counter-reset:s}
+ol.checklist li{counter-increment:s;display:grid;grid-template-columns:26px 1fr auto;gap:10px;align-items:start;padding:12px 0;border-top:1px solid var(--line)}
+ol.checklist input{width:18px;height:18px;margin:2px 0 0;accent-color:var(--stbd);cursor:pointer}
+.st-t{font-weight:600;font-size:15px;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.st-t::before{content:counter(s,decimal-leading-zero);font:500 12px var(--f-mono);color:var(--muted)}
+.st-d{font-size:14px;color:var(--muted);margin-top:3px;max-width:70ch}
+li.done .st-t,li.done .st-d{opacity:.45;text-decoration:line-through}
+.stat{font:500 11px/1.2 var(--f-mono);letter-spacing:.05em;text-transform:uppercase;white-space:nowrap;display:inline-flex;align-items:center;gap:6px;padding-top:3px}
+.stat::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.stat.now{color:var(--accent)} .stat.next{color:var(--warn)} .stat.later{color:var(--muted)}
+.stat.later::before{background:transparent;border:1.5px solid currentColor;width:6px;height:6px}
+.kind{font:500 10.5px/1 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-right:2px}
+li.reef .kind{color:var(--sea)}
+.omitted{font-size:13px;color:var(--muted);margin:0}
+details.proc{border-top:1px solid var(--line-strong);padding-top:10px}
+details.proc summary{cursor:pointer;font:600 16px var(--f-display)}
+details.proc ol{margin:10px 0 0;padding-left:22px;display:flex;flex-direction:column;gap:6px;font-size:14px}
+
+/* Mis barcos */
+.save-row{display:flex;gap:8px;flex-wrap:wrap}
+.boats{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.boat{border-bottom:1px solid var(--line);padding:12px 0;display:flex;flex-direction:column;gap:8px}
+.boat.active{background:var(--sea-soft);padding:12px 12px;border-radius:3px;border-bottom-color:transparent}
+.boat-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+.boat-name{font:600 18px/1.15 var(--f-display)}
+.boat-meta{font:400 12.5px/1.4 var(--f-mono);color:var(--muted)}
+.boat-actions{display:flex;gap:6px;flex-wrap:wrap}
+.mini{appearance:none;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);font:500 13px var(--f-body);padding:6px 10px;border-radius:3px;cursor:pointer}
+.mini.danger{border-color:transparent;background:none;color:var(--port);text-decoration:underline;text-underline-offset:3px}
+.pill{font:500 10.5px/1 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--sea)}
+.empty{border:1px dashed var(--line-strong);border-radius:3px;padding:16px;font-size:14px;color:var(--muted)}
+#save-state{font:500 12px var(--f-mono)}
+#save-state.dirty{color:var(--warn)}
+
+footer{font-size:12.5px;color:var(--muted);border-top:1px solid var(--line-strong);padding-top:12px;display:flex;flex-direction:column;gap:6px;max-width:110ch}
+footer p{margin:0}
+
+/* SVG del dial (usa los tokens del instrumento) */
+.d-face{fill:var(--surface);stroke:var(--line);stroke-width:1.5}
+.d-ring{fill:none;stroke:var(--line);stroke-width:1}
+.d-tick{stroke:var(--muted);stroke-width:1}
+.d-tick.maj{stroke:var(--ink);stroke-width:1.8}
+.d-lbl{fill:var(--muted);font:500 11px var(--f-mono);text-anchor:middle;dominant-baseline:middle}
+.d-nogo{fill:var(--accent);fill-opacity:.13}
+.d-stbd{fill:none;stroke:var(--stbd);stroke-width:4}
+.d-port{fill:none;stroke:var(--port);stroke-width:4}
+.d-hull{fill:var(--sea-soft);stroke:var(--ink);stroke-width:1.5}
+.d-cock{fill:var(--bg);stroke:var(--ink);stroke-width:1}
+.d-boom{stroke:var(--ink);stroke-width:2.4;stroke-linecap:round}
+.d-main{fill:var(--sea);fill-opacity:.4;stroke:var(--sea);stroke-width:1.6}
+.d-gen{fill:var(--ink);fill-opacity:.18;stroke:var(--ink);stroke-width:1.4}
+.d-luff{stroke-dasharray:4 3}
+.d-mast{fill:var(--ink)}
+.d-wind{fill:var(--accent);stroke:var(--bg);stroke-width:2}
+.d-wind-in{fill:var(--bg)}
+.d-arrow{stroke:var(--accent);stroke-width:3;stroke-linecap:round;fill:none}
+.d-arrowhead{fill:var(--accent)}
+@media (prefers-reduced-motion:reduce){body{transition:none}}
+/* v3.2: menos etiquetas, menos ruido */
+.meta{font-size:12.5px;color:var(--muted)}
+.ver{font:400 12px/1.3 var(--f-body);letter-spacing:0}
+.part{font:400 12px/1.3 var(--f-body);letter-spacing:0;text-transform:none;color:var(--muted)}
+.tt-h{font:500 12px/1.3 var(--f-body);letter-spacing:0;text-transform:none}
+.kind{display:none}
+.stat{font:500 12px/1.3 var(--f-body);letter-spacing:0;text-transform:none;padding-top:2px}
+.stat::before,.stat.later::before{display:none}
+.st-t::before{content:none}
+ol.checklist li{grid-template-columns:24px 1fr auto}
+ol.checklist li.cl-sep{display:block;padding:18px 0 6px;font:600 14px/1.3 var(--f-display);color:var(--sea);border-top:1px solid var(--line-strong)}
+ol.checklist li.cl-sep+li{border-top:0}
+.reefbox strong{font:600 14px/1.3 var(--f-body);letter-spacing:0;text-transform:none}
+.progress{font:400 13px var(--f-body)}
+#save-state{font:400 12.5px var(--f-body)}
+.boat-meta{font:400 13px/1.4 var(--f-body)}
+.pill{font:500 12px/1 var(--f-body);letter-spacing:0;text-transform:none}
+.amura{font:600 12px/1 var(--f-body);letter-spacing:.01em;text-transform:none;padding:4px 7px}
+.themes button{padding:7px 9px}
+.themes svg{width:15px;height:15px}
+.instrument{padding-top:18px}
+details.about{font-size:13px;color:var(--muted)}
+details.about summary{cursor:pointer;color:var(--ink);font-weight:500;font-size:13.5px}
+details.about p{margin:8px 0 0;max-width:62ch}
+.examples{gap:2px 14px}
+footer{max-width:none}
+
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="appbar">
+    <div class="brand">
+      <svg class="mark" viewBox="0 0 34 34" aria-hidden="true"><path class="m3" d="M3 28.5c4 0 4-2 8-2s4 2 8 2 4-2 8-2 4 2 4 2"/><path class="m1" d="M16 3v21H6.5z"/><path class="m2" d="M18 6l9.5 18H18z"/></svg>
+      <div><h1>Asistente de Trimado</h1><span class="ver">Prototipo v3.2</span></div>
+    </div>
+    <div class="prefs">
+      <div class="seg small langs" id="langs" role="group" aria-label="Idioma"><button type="button" data-v="es" lang="es">ES</button><button type="button" data-v="en" lang="en">EN</button><button type="button" data-v="fr" lang="fr">FR</button></div>
+      <div class="seg small themes" id="themes" role="group" aria-label="Tema">
+        <button type="button" data-v="auto" aria-label="Automático" title="Automático"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="5.5"/><path d="M8 2.5v11a5.5 5.5 0 0 0 0-11z" fill="currentColor" stroke="none"/></svg></button>
+        <button type="button" data-v="light" aria-label="Día" title="Día"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="3"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3 3l1.4 1.4M11.6 11.6 13 13M3 13l1.4-1.4M11.6 4.4 13 3"/></svg></button>
+        <button type="button" data-v="dark" aria-label="Noche" title="Noche"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M13 10.2A5.5 5.5 0 0 1 5.8 3 5.5 5.5 0 1 0 13 10.2z"/></svg></button>
+      </div>
+    </div>
+  </header>
+
+  <nav class="tabs" aria-label="Secciones">
+    <div class="tablist">
+      <a href="#trimado" data-view="trimado">Trimado</a>
+      <a href="#problema" data-view="problema">¿Qué te pasa?</a>
+      <a href="#barcos" data-view="barcos">Mis barcos</a>
+    </div>
+    <label class="boatbar"><span>Barco</span><select id="boat-sel" aria-label="Barco activo"></select></label>
+  </nav>
+
+  <div class="view" id="v-trimado">
+  <div class="grid">
+    <div class="col">
+      <section class="panel instrument" aria-label="Viento">
+        <div class="dial-wrap">
+          <svg id="dial" viewBox="0 0 300 300" role="img" aria-label="Dial de viento aparente">
+            <g id="d-static"></g>
+            <g id="d-sails"></g>
+            <g id="d-windg"></g>
+          </svg>
+          <div class="readout">
+            <span class="big" id="r-ang">45°</span>
+            <span class="zone" id="r-zone">Ceñida</span>
+            <span class="amura estribor" id="r-amura">Amura de estribor</span>
+          </div>
+          <p class="zone-d" id="r-zdesc"></p>
+        </div>
+        <div class="slider">
+          <label for="awa">Aparente</label>
+          <input type="range" id="awa" min="0" max="180" step="1" value="45">
+          <output id="o-awa">45°</output>
+        </div>
+        <div class="slider">
+          <label for="tws">Real</label>
+          <input type="range" id="tws" min="0" max="40" step="1" value="15">
+          <output id="o-tws">15 kn</output>
+        </div>
+      </section>
+
+      <section class="panel" aria-labelledby="h-polar">
+        <div class="panel-h"><h2 id="h-polar">Polar estimada</h2><span class="meta" id="polar-ctx"></span></div>
+        <div class="kpis">
+          <div class="kpi"><span>Objetivo</span><b id="k-target">–</b><small id="k-target-s"></small></div>
+          <div class="kpi"><span>Ceñida óptima</span><b id="k-beat">–</b><small id="k-beat-s"></small></div>
+          <div class="kpi"><span>Popa óptima</span><b id="k-run">–</b><small id="k-run-s"></small></div>
+        </div>
+        <svg id="polar" viewBox="0 0 300 335" role="img" aria-label="Diagrama polar estimado de tu barco"></svg>
+        <div class="perf">
+          <div class="perf-row">
+            <div class="field" style="flex:0 0 150px"><label for="b-stw">Velocidad en el agua</label><input id="b-stw" type="number" step="0.1" min="0" max="30" inputmode="decimal" placeholder="kn"></div>
+            <p class="hint" id="perf-txt" style="flex:1 1 170px"></p>
+          </div>
+          <div class="meter" id="perf-m" hidden><i id="perf-bar"></i></div>
+          <button type="button" class="linkbtn" id="perf-go" hidden></button>
+        </div>
+        <details class="about">
+          <summary>Cómo se calcula</summary>
+          <p id="polar-note"></p>
+          <p>Mediana de las predicciones VPP de 73 cruceros sin spinnaker, de 8,3 a 15,4 m y con certificado ORC (datos públicos en github.com/jieter/orc-data), escalada por eslora. Frente a esos VPP el error típico es del 3 %; en 9 de cada 10 casos, menos del 11 %. La manga no mejoró la predicción y no entra en el cálculo.</p>
+          <p>Azul: 6, 10, 14 y 20 kn de viento real, más oscuro cuanto más viento. Discontinua: tu viento ahora. Punteadas: ángulos óptimos de ceñida y popa.</p>
+        </details>
+      </section>
+    </div>
+    <div class="col">
+      <section class="panel" aria-labelledby="h-trim">
+        <div class="panel-h"><h2 id="h-trim">Trimado para este rumbo</h2><span class="meta" id="trim-ctx"></span></div>
+        <div class="reefbox" id="reefbox"></div>
+        <div class="trim-grid">
+          <div class="sail"><h3>Mayor</h3><ul id="t-mayor"></ul></div>
+          <div class="sail"><h3>Génova</h3><ul id="t-genova"></ul></div>
+        </div>
+      </section>
+
+      <section class="panel" aria-labelledby="h-tt">
+        <div class="panel-h"><h2 id="h-tt">Lanitas</h2></div>
+        <div class="tt-wrap">
+          <div class="tt-col">
+            <div><p class="subh">Génova · grátil</p><div class="tt-grid g" id="tt-g"></div></div>
+            <div><p class="subh">Mayor · baluma</p><div class="tt-grid m" id="tt-m"></div></div>
+            <button type="button" class="linkbtn" id="tt-reset">Restablecer</button>
+          </div>
+          <div class="tt-out" id="tt-out" aria-live="polite"></div>
+        </div>
+      </section>
+    </div>
+  </div>
+  </div>
+
+  <div class="view" id="v-problema" hidden>
+  <div class="grid">
+    <div class="col">
+      <section class="panel" aria-labelledby="h-ctx">
+        <div class="panel-h"><h2 id="h-ctx">Situación</h2><span class="meta" id="ctx-boat"></span></div>
+        <div class="slider">
+          <label for="tws2">Viento real</label>
+          <input type="range" id="tws2" min="0" max="40" step="1" value="15">
+          <output id="o-tws2">15 kn</output>
+        </div>
+        <div class="cfg-group">
+          <h3>Rumbo</h3>
+          <div class="toggles" id="rumbos"></div>
+        </div>
+        <p class="hint" id="ctx-now"></p>
+      </section>
+    </div>
+    <div class="col">
+      <section class="panel" aria-labelledby="h-prob">
+        <div class="panel-h"><h2 id="h-prob">¿Qué te pasa?</h2></div>
+        <form class="ask" id="ask">
+          <div class="ask-row">
+            <input id="q" type="text" autocomplete="off" aria-label="Describe la situación" placeholder="Escríbelo como lo dirías a bordo" value="Con viento de 15 nudos me voy de orzada y estoy sufriendo">
+            <button class="btn" type="submit">Analizar</button>
+          </div>
+          <div class="examples">Por ejemplo:
+            <button type="button" class="ex">Ciñendo con 6 nudos el barco no anda</button>
+            <button type="button" class="ex">A un largo con 22 nudos voy muy escorado</button>
+            <button type="button" class="ex">En popa con 20 nudos, mucho balanceo</button>
+          </div>
+        </form>
+        <div class="understood" id="understood" aria-live="polite"></div>
+        <div class="chips" id="chips" role="group" aria-label="O elige el problema"></div>
+
+        <div class="cl-head"><h3 id="cl-title">Checklist</h3><span class="progress" id="cl-prog"></span></div>
+        <p class="why" id="cl-why"></p>
+        <ol class="checklist" id="checklist"></ol>
+        <p class="omitted" id="omitted"></p>
+        <details class="proc" id="proc">
+          <summary>Cómo tomar un rizo (rizo de botavara)</summary>
+          <ol>
+            <li>Avisa a la tripulación. Con mar, chalecos y arnés enganchado antes de salir de la bañera.</li>
+            <li>Ponte a rumbo de ceñida o descuartelar con el génova trabajando, o al pairo, para descargar la mayor.</li>
+            <li>Larga la contra y tensa el amantillo para que la botavara no caiga (si tienes contra rígida, sujeta ella).</li>
+            <li>Larga escota de mayor hasta que la vela flamee y no tire.</li>
+            <li>Larga la driza hasta la marca del rizo.</li>
+            <li>Engancha el ollao de amura en la garra, o caza el cabo de amura del rizo.</li>
+            <li>Vuelve a tensar la driza hasta que el grátil quede sin arrugas.</li>
+            <li>Caza el cabo de rizo de la baluma hasta que el ollao baje a la botavara.</li>
+            <li>Larga el amantillo, caza escota y contra y vuelve al rumbo.</li>
+            <li>Si quieres, recoge el paño sobrante con los matafiones alrededor de la vela, nunca alrededor de la botavara.</li>
+          </ol>
+          <p class="hint" style="margin-top:8px">Con rizo de un solo cabo, los pasos 6 y 8 se hacen a la vez desde la bañera.</p>
+        </details>
+      </section>
+    </div>
+  </div>
+  </div>
+
+  <div class="view" id="v-barcos" hidden>
+  <div class="grid">
+    <div class="col">
+      <section class="panel" aria-labelledby="h-boats">
+        <div class="panel-h"><h2 id="h-boats">Tus barcos</h2><button type="button" class="linkbtn" id="new-boat">+ Nuevo barco</button></div>
+        <p class="hint" id="store-note"></p>
+        <ul class="boats" id="boat-list"></ul>
+      </section>
+    </div>
+    <div class="col">
+      <section class="panel" aria-labelledby="h-barco">
+        <div class="panel-h"><h2 id="h-barco">Ficha del barco</h2><span class="meta" id="save-state"></span></div>
+
+        <div class="cfg-group">
+          <div class="row" style="justify-content:space-between"><h3>Medidas</h3>
+            <div class="seg" id="unit" role="group" aria-label="Unidades">
+              <button type="button" data-v="m">Metros</button><button type="button" data-v="ft">Pies</button>
+            </div></div>
+          <div class="ficha">
+            <div class="field full"><label for="b-name">Modelo</label><input id="b-name" type="text" placeholder="Ej. Oceanis 38.1"></div>
+            <div class="field"><label for="b-loa" data-i>Eslora (<span class="u-lbl">m</span>)</label><input id="b-loa" type="number" step="0.1" min="1" max="100" inputmode="decimal"></div>
+            <div class="field"><label for="b-beam" data-i>Manga (<span class="u-lbl">m</span>)</label><input id="b-beam" type="number" step="0.1" min="1" max="30" inputmode="decimal"></div>
+          </div>
+          <p class="warn" id="b-warn" hidden></p>
+        </div>
+
+        <div class="cfg-group">
+          <h3>Aparejo</h3>
+          <div class="seg" id="rig" role="group" aria-label="Tipo de aparejo">
+            <button type="button" data-v="fraccionado">Fraccionado</button>
+            <button type="button" data-v="tope">A tope de palo</button>
+          </div>
+          <p class="hint">Mira desde proa: si el estay de proa llega al tope del mástil, es a tope de palo. Si queda mástil por encima, es fraccionado.</p>
+        </div>
+
+        <div class="cfg-group">
+          <h3>Mayor</h3>
+          <div class="toggles" id="tg-mayor"></div>
+          <div class="row"><span class="hint" style="font-weight:600;color:var(--ink)">Rizos</span>
+            <div class="seg" id="rizos" role="group" aria-label="Número de rizos">
+              <button type="button" data-v="0">0</button><button type="button" data-v="1">1</button><button type="button" data-v="2">2</button><button type="button" data-v="3">3</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="cfg-group">
+          <h3>Génova</h3>
+          <div class="toggles" id="tg-genova"></div>
+        </div>
+
+        <div class="save-row">
+          <button type="button" class="btn" id="save-boat">Guardar barco</button>
+          <button type="button" class="btn ghost" id="save-new">Guardar como nuevo</button>
+        </div>
+        <p class="legend" data-i><b>Grátil</b> = cunningham / driza · <b>Pujamen</b> = cabo de pujamen · <b>Baluma</b> = escota, carro, contra y escotero · <b>Bolsa</b> = tensor del estay de popa, si lo tienes, + todo lo anterior</p>
+      </section>
+    </div>
+  </div>
+  </div>
+
+  <footer>
+    <p>Prototipo. Las polares son estimaciones y los umbrales de rizo, orientativos: si estás pensando en rizar, riza.</p>
+  </footer>
+</div>
+
+<script>
+const I18N={"Concepto · Navegación a vela":["Concept · Sailing","Concept · Voile"],"Asistente de Trimado":["Trim Assistant","Assistant de réglage"],"Guarda tus barcos, marca de dónde te entra el viento y cuéntale qué te pasa. Te devuelve el trimado y un checklist ordenado, del ajuste más fino a los rizos.":["Save your boats, mark where the wind is coming from and describe what is happening. You get the trim and an ordered checklist, from the finest adjustment to reefing.","Enregistre tes bateaux, indique d'où vient le vent et décris ce qui se passe. Tu obtiens le réglage et une checklist ordonnée, du réglage le plus fin jusqu'à la prise de ris."],"Prototipo v3.0":["Prototype v3.0","Prototype v3.0"],"Secciones":["Sections","Sections"],"Trimado":["Trim","Réglage"],"¿Qué te pasa?":["What's wrong?","Un problème ?"],"Mis barcos":["My boats","Mes bateaux"],"Barco":["Boat","Bateau"],"Viento":["Wind","Vent"],"Dial de viento aparente":["Apparent wind dial","Cadran du vent apparent"],"Ángulo":["Angle","Angle"],"Viento real":["True wind","Vent réel"],"Ángulo = viento aparente respecto a la proa (lo que ves en las lanitas y la veleta). Viento real = el que sopla, sin contar tu velocidad.":["Angle = apparent wind relative to the bow (what you see on the telltales and the wind vane). True wind = the wind that is actually blowing, without your own speed.","Angle = vent apparent par rapport à l'étrave (ce que montrent les penons et la girouette). Vent réel = le vent qui souffle vraiment, sans ta propre vitesse."],"Polar estimada":["Estimated polar","Polaire estimée"],"Objetivo":["Target","Objectif"],"Ceñida óptima":["Best upwind","Près optimal"],"Popa óptima":["Best downwind","Portant optimal"],"Diagrama polar estimado de tu barco":["Estimated polar diagram of your boat","Diagramme polaire estimé de ton bateau"],"Tu velocidad (kn)":["Your speed (kn)","Ta vitesse (nd)"],"Ej. 5.4":["E.g. 5.4","Ex. 5,4"],"Trimado para este rumbo":["Trim for this point of sail","Réglage pour cette allure"],"Mayor":["Main","Grand-voile"],"Génova":["Genoa","Génois"],"Lanitas":["Telltales","Penons"],"Toca cada lanita para marcar cómo está":["Tap each telltale to mark how it looks","Touche chaque penon pour indiquer son état"],"Génova · grátil":["Genoa · luff","Génois · guindant"],"Mayor · baluma":["Main · leech","Grand-voile · chute"],"Marcar todas volando":["Mark all streaming","Tous les penons volent"],"Situación":["Situation","Situation"],"El checklist usa este viento y este rumbo. Puedes cambiarlos aquí, escribirlos en la frase o afinarlos con el dial en Trimado.":["The checklist uses this wind and this point of sail. Change them here, type them in your sentence or fine-tune them with the dial in Trim.","La checklist utilise ce vent et cette allure. Modifie-les ici, écris-les dans ta phrase ou affine-les avec le cadran dans Réglage."],"Rumbo":["Point of sail","Allure"],"Escríbelo como lo dirías a bordo":["Write it the way you would say it on board","Écris-le comme tu le dirais à bord"],"Describe la situación":["Describe the situation","Décris la situation"],"Analizar":["Analyse","Analyser"],"Ejemplos:":["Examples:","Exemples :"],"Ciñendo con 6 nudos el barco no anda":["Close-hauled in 6 knots the boat is slow","Au près avec 6 nœuds le bateau est lent"],"A un largo con 22 nudos voy muy escorado":["Broad reach in 22 knots, too much heel","Au grand largue avec 22 nœuds, trop de gîte"],"En popa con 20 nudos, mucho balanceo":["Dead run in 20 knots, lots of rolling","Vent arrière avec 20 nœuds, beaucoup de roulis"],"Con viento de 15 nudos me voy de orzada y estoy sufriendo":["In 15 knots of wind I keep rounding up and struggling","Avec 15 nœuds de vent je pars au lof et je souffre"],"Cómo tomar un rizo (rizo de botavara)":["How to take a reef (slab reefing)","Comment prendre un ris (ris à bosses)"],"Avisa a la tripulación. Con mar, chalecos y arnés enganchado antes de salir de la bañera.":["Tell the crew. In a seaway, lifejackets on and harness clipped in before leaving the cockpit.","Préviens l'équipage. Avec de la mer, gilets et harnais attachés avant de sortir du cockpit."],"Ponte a rumbo de ceñida o descuartelar con el génova trabajando, o al pairo, para descargar la mayor.":["Sail close-hauled or close reaching with the genoa drawing, or heave to, to depower the main.","Mets-toi au près ou au bon plein avec le génois qui porte, ou à la cape, pour déventer la grand-voile."],"Larga la contra y tensa el amantillo para que la botavara no caiga (si tienes contra rígida, sujeta ella).":["Ease the vang and take up the topping lift so the boom does not drop (a rigid vang holds it for you).","Choque le hale-bas et reprends la balancine pour que la bôme ne tombe pas (un hale-bas rigide la tient tout seul)."],"Larga escota de mayor hasta que la vela flamee y no tire.":["Ease the mainsheet until the sail luffs and stops pulling.","Choque l'écoute de GV jusqu'à ce que la voile faseye et ne tire plus."],"Larga la driza hasta la marca del rizo.":["Lower the halyard to the reef mark.","Affale la drisse jusqu'à la marque de ris."],"Engancha el ollao de amura en la garra, o caza el cabo de amura del rizo.":["Hook the tack cringle on the reefing hook, or tension the reef tack line.","Crochète l'œillet d'amure sur le croc de ris, ou reprends la bosse d'amure."],"Vuelve a tensar la driza hasta que el grátil quede sin arrugas.":["Re-tension the halyard until the luff is free of wrinkles.","Reprends la drisse jusqu'à ce que le guindant n'ait plus de plis."],"Caza el cabo de rizo de la baluma hasta que el ollao baje a la botavara.":["Haul in the leech reef line until the clew cringle comes down to the boom.","Reprends la bosse de ris de chute jusqu'à ce que l'œillet descende sur la bôme."],"Larga el amantillo, caza escota y contra y vuelve al rumbo.":["Ease the topping lift, trim sheet and vang, and get back on course.","Choque la balancine, reprends écoute et hale-bas et reprends ton cap."],"Si quieres, recoge el paño sobrante con los matafiones alrededor de la vela, nunca alrededor de la botavara.":["If you want, tie up the loose cloth with the reef points around the sail, never around the boom.","Si tu veux, ferle le surplus de toile avec les garcettes autour de la voile, jamais autour de la bôme."],"Con rizo de un solo cabo, los pasos 6 y 8 se hacen a la vez desde la bañera.":["With single-line reefing, steps 6 and 8 happen together from the cockpit.","Avec un ris automatique (une seule bosse), les étapes 6 et 8 se font en même temps depuis le cockpit."],"Tus barcos":["Your boats","Tes bateaux"],"+ Nuevo barco":["+ New boat","+ Nouveau bateau"],"Ficha del barco":["Boat details","Fiche du bateau"],"Medidas":["Dimensions","Dimensions"],"Unidades":["Units","Unités"],"Metros":["Metres","Mètres"],"Pies":["Feet","Pieds"],"pies":["ft","pieds"],"Modelo":["Model","Modèle"],"Ej. Oceanis 38.1":["E.g. Oceanis 38.1","Ex. Oceanis 38.1"],"Eslora (<span class=\"u-lbl\">m</span>)":["Length (<span class=\"u-lbl\">m</span>)","Longueur (<span class=\"u-lbl\">m</span>)"],"Manga (<span class=\"u-lbl\">m</span>)":["Beam (<span class=\"u-lbl\">m</span>)","Largeur (<span class=\"u-lbl\">m</span>)"],"Aparejo":["Rig","Gréement"],"Tipo de aparejo":["Rig type","Type de gréement"],"Fraccionado":["Fractional","Fractionné"],"fraccionado":["fractional","fractionné"],"A tope de palo":["Masthead","En tête de mât"],"A tope":["Masthead","En tête"],"a tope":["masthead","en tête"],"Mira desde proa: si el estay de proa llega al tope del mástil, es a tope de palo. Si queda mástil por encima, es fraccionado.":["Look up from the bow: if the forestay reaches the top of the mast, it is a masthead rig. If there is mast above it, it is fractional.","Regarde depuis l'avant : si l'étai arrive en tête de mât, c'est un gréement en tête. S'il reste du mât au-dessus, il est fractionné."],"Rizos":["Reefs","Ris"],"Número de rizos":["Number of reefs","Nombre de ris"],"Guardar como nuevo":["Save as new","Enregistrer comme nouveau"],"<b>Grátil</b> = cunningham / driza · <b>Pujamen</b> = cabo de pujamen · <b>Baluma</b> = escota, carro, contra y escotero · <b>Bolsa</b> = tensor del estay de popa, si lo tienes, + todo lo anterior":["<b>Luff</b> = cunningham / halyard · <b>Foot</b> = outhaul · <b>Leech</b> = sheet, traveller, vang and genoa car · <b>Depth</b> = backstay adjuster, if you have one, + all of the above","<b>Guindant</b> = cunningham / drisse · <b>Bordure</b> = étarqueur de bordure · <b>Chute</b> = écoute, chariot, hale-bas et chariot de génois · <b>Creux</b> = réglage de pataras, si tu en as un, + tout le reste"],"Prototipo de concepto. Polar estimada: mediana de las predicciones VPP de 73 cruceros sin spinnaker de 8,3 a 15,4 m con certificado ORC (datos públicos vía github.com/jieter/orc-data), escalada por eslora. Frente a esos VPP, el error típico es del 3 % (en 9 de cada 10 casos, menos del 11 %). El VPP es una predicción de barco limpio y bien trimado; un crucero cargado va más lento. La manga no mejoró la predicción, así que de momento no entra en el cálculo. Los umbrales de rizo siguen siendo orientativos para un crucero de 30–40 pies. Si estás pensando en rizar, riza. El módulo de texto reconoce palabras clave; no es una IA.":["Concept prototype. Estimated polar: median of the VPP predictions for 73 non-spinnaker cruisers of 8.3 to 15.4 m with an ORC certificate (public data via github.com/jieter/orc-data), scaled by length. Against those VPPs the typical error is 3% (in 9 out of 10 cases, under 11%). A VPP predicts a clean, well-trimmed boat; a loaded cruiser is slower. Beam did not improve the prediction, so it is not used in the calculation for now. Reefing thresholds are still rough guides for a 30–40 ft cruiser. If you are thinking about reefing, reef. The text module recognises keywords; it is not an AI.","Prototype de concept. Polaire estimée : médiane des prédictions VPP de 73 croiseurs sans spi de 8,3 à 15,4 m avec certificat ORC (données publiques via github.com/jieter/orc-data), mise à l'échelle selon la longueur. Par rapport à ces VPP, l'erreur typique est de 3 % (dans 9 cas sur 10, moins de 11 %). Un VPP prédit un bateau propre et bien réglé ; un croiseur chargé va moins vite. La largeur n'a pas amélioré la prédiction, elle n'entre donc pas dans le calcul pour l'instant. Les seuils de ris restent indicatifs pour un croiseur de 30 à 40 pieds. Si tu penses à prendre un ris, prends-le. Le module de texte reconnaît des mots-clés ; ce n'est pas une IA."],"Carro de mayor":["Mainsheet traveller","Chariot de GV"],"Tensor en el estay de popa":["Backstay adjuster","Réglage de pataras"],"Cunningham":["Cunningham","Cunningham"],"Pujamen ajustable":["Adjustable outhaul","Bordure réglable"],"Contra":["Vang","Hale-bas"],"Enrollador":["Furler","Enrouleur"],"Escotero ajustable":["Adjustable genoa car","Chariot de génois réglable"],"Tangón":["Whisker pole","Tangon"],"tensor en el estay de popa":["backstay adjuster","réglage de pataras"],"pujamen ajustable":["adjustable outhaul","bordure réglable"],"escotero ajustable":["adjustable genoa car","chariot de génois réglable"],"carro de mayor":["mainsheet traveller","chariot de GV"],"contra":["vang","hale-bas"],"enrollador":["furler","enrouleur"],"rizos":["reefs","ris"],"2º rizo":["2nd reef","2e ris"],"3er rizo":["3rd reef","3e ris"],"Proa al viento":["Head to wind","Face au vent"],"Ceñida":["Close-hauled","Près"],"Descuartelar":["Close reach","Bon plein"],"Través":["Beam reach","Travers"],"Largo":["Broad reach","Largue"],"Empopada":["Dead run","Vent arrière"],"Más cerrado que la ceñida óptima (unos {a}° reales). Las velas flamean y el barco se para: cae.":["Pointing higher than the best close-hauled angle (about {a}° true). The sails luff and the boat stops: bear away.","Plus serré que le près optimal (environ {a}° réels). Les voiles faseyent et le bateau s'arrête : abats."],"Lo más cerca del viento que se navega. Velas cazadas y planas; timón fino con los catavientos.":["As close to the wind as you can sail. Sails trimmed in and flat; steer finely by the telltales.","Le plus près du vent possible. Voiles bordées et plates ; barre fine aux penons."],"Entre la ceñida y el través. Larga un poco las velas: el barco acelera.":["Between close-hauled and a beam reach. Ease the sails a little: the boat speeds up.","Entre le près et le travers. Choque un peu les voiles : le bateau accélère."],"Viento por el costado. Velas a medio largar y con bolsa. Suele ser el rumbo más rápido.":["Wind on the beam. Sails half eased with depth. Usually the fastest point of sail.","Vent de travers. Voiles à moitié choquées, avec du creux. C'est souvent l'allure la plus rapide."],"Viento por la aleta. Velas muy largadas; se escora poco y se nota menos viento del que hay.":["Wind on the quarter. Sails well eased; little heel, and it feels like less wind than there is.","Vent par la hanche. Voiles bien choquées ; peu de gîte, et on ressent moins de vent qu'il n'y en a."],"Viento por popa. Mayor abierta hasta casi los obenques; vigila la trasluchada.":["Wind from astern. Main eased almost to the shrouds; watch out for a gybe.","Vent arrière. GV choquée presque jusqu'aux haubans ; attention à l'empannage."],"Ángulo real ≈ {a}°.":["True angle ≈ {a}°.","Angle réel ≈ {a}°."],"Amura de estribor":["Starboard tack","Tribord amures"],"Amura de babor":["Port tack","Bâbord amures"],"estribor":["starboard","tribord"],"babor":["port","bâbord"],"Estás en la zona muerta. Cae hasta 40–45° antes de trimar nada.":["You are in the no-go zone. Bear away to 40–45° before trimming anything.","Tu es dans la zone morte. Abats jusqu'à 40–45° avant de régler quoi que ce soit."],"Cazada sin pasarte: deja que la parte alta abra un poco.":["Trimmed in, but not too hard: let the top twist open a little.","Bordée sans excès : laisse le haut vriller un peu."],"Cazada. En rachas, baja el carro o larga un palmo para no escorar de más.":["Trimmed in. In gusts, drop the traveller or ease a hand-width so you do not over-heel.","Bordée. Dans les rafales, descends le chariot ou choque un peu pour ne pas trop gîter."],"Cazada: botavara cerca del eje y el catavientos de baluma alto volando casi siempre.":["Trimmed in: boom near the centreline and the top leech telltale streaming most of the time.","Bordée : bôme près de l'axe et penon de chute du haut qui vole presque tout le temps."],"Un poco largada respecto a la ceñida.":["Eased a little compared with close-hauled.","Un peu choquée par rapport au près."],"A medio largar: larga hasta que flamee el grátil y caza un poco.":["Half eased: ease until the luff starts to flutter, then trim in a touch.","À moitié choquée : choque jusqu'à ce que le guindant faseye, puis reborde un peu."],"Muy largada: larga hasta que flamee el grátil y caza un poco.":["Well eased: ease until the luff starts to flutter, then trim in a touch.","Bien choquée : choque jusqu'à ce que le guindant faseye, puis reborde un peu."],"Largada casi hasta los obenques, sin que la vela apoye en ellos.":["Eased almost to the shrouds, without the sail resting on them.","Choquée presque jusqu'aux haubans, sans que la voile s'appuie dessus."],"Escota":["Sheet","Écoute"],"§Baluma":["Leech","Chute"],"Carro":["Traveller","Chariot"],"A barlovento: centra la botavara con la escota algo suelta.":["To windward: centre the boom with the sheet slightly eased.","Au vent : bôme dans l'axe avec l'écoute un peu choquée."],"A sotavento: bájalo en cada racha antes de tocar la escota.":["To leeward: drop it in each gust before touching the sheet.","Sous le vent : descends-le à chaque rafale avant de toucher à l'écoute."],"Botavara en el eje.":["Boom on the centreline.","Bôme dans l'axe."],"A sotavento del todo.":["All the way to leeward.","Tout sous le vent."],"Sin carro: para descargar, larga escota y controla la baluma con la contra.":["No traveller: to depower, ease the sheet and control the leech with the vang.","Sans chariot : pour déventer, choque l'écoute et tiens la chute avec le hale-bas."],"Suelta.":["Off.","Choqué."],"Tensa.":["On.","Repris."],"Tensa: sin carro es la que sujeta la baluma cuando largas escota.":["On: without a traveller, it is what holds the leech when you ease the sheet.","Repris : sans chariot, c'est lui qui tient la chute quand tu choques l'écoute."],"Sin holgura, sin tirar.":["Slack taken up, not pulling.","Sans mou, sans tirer."],"Tensa moderada: evita que la botavara suba y que el barco balancee.":["Moderately on: stops the boom lifting and the boat rolling.","Modérément repris : empêche la bôme de monter et le bateau de rouler."],"Ajustada para que la parte alta no se abra de más. En rachas fuertes, lárgala para soltar presión.":["Set so the top does not twist open too much. In strong gusts, ease it to spill pressure.","Réglé pour que le haut ne vrille pas trop. Dans les fortes rafales, choque-le pour libérer de la pression."],"Sin contra, la botavara sube al largar escota y la vela se abre arriba. A rumbos abiertos tendrás más escora y balanceo.":["Without a vang, the boom lifts when you ease the sheet and the top of the sail opens. Off the wind you will get more heel and rolling.","Sans hale-bas, la bôme monte quand tu choques l'écoute et le haut de la voile s'ouvre. Aux allures portantes tu auras plus de gîte et de roulis."],"Pujamen":["Outhaul","Bordure"],"§Pujamen":["Foot","Bordure"],"Cazado a tope: aplana el tercio bajo.":["Hard on: flattens the lower third.","Bien étarquée : aplatit le tiers inférieur."],"Suelto: más bolsa, más potencia.":["Eased: more depth, more power.","Choquée : plus de creux, plus de puissance."],"Algo suelto: bolsa abajo.":["Slightly eased: depth low down.","Un peu choquée : du creux en bas."],"Medio: sin arrugas en el pujamen.":["Medium: no wrinkles along the foot.","Moyen : pas de plis le long de la bordure."],"Driza":["Halyard","Drisse"],"§Grátil":["Luff","Guindant"],"Tenso: lleva la bolsa hacia delante y abre la baluma alta.":["On: moves the depth forward and opens the upper leech.","Repris : avance le creux et ouvre le haut de la chute."],"Suelto: unas arrugas leves en el grátil no importan.":["Eased: a few light wrinkles in the luff do not matter.","Choqué : quelques légers plis au guindant ne gênent pas."],"Estay de popa":["Backstay","Pataras"],"§Bolsa":["Depth","Creux"],"Tensor algo cazado: sujeta el aparejo.":["Adjuster slightly on: supports the rig.","Pataras un peu repris : tient le gréement."],"Tensor suelto: más bolsa.":["Adjuster off: more depth.","Pataras choqué : plus de creux."],"Tensor cazado: curva el mástil, aplana la mayor y abre la baluma alta. De paso tensa el estay de proa y el génova se aplana.":["Adjuster on: bends the mast, flattens the main and opens the upper leech. It also tightens the forestay, so the genoa flattens.","Pataras repris : cintre le mât, aplatit la GV et ouvre le haut de la chute. Au passage il tend l'étai et le génois s'aplatit."],"Tensor cazado: en aparejo a tope casi no toca la mayor; lo que hace es tensar el estay de proa para que no se combe y el génova vaya más plano.":["Adjuster on: on a masthead rig it barely affects the main; it tightens the forestay so it does not sag and the genoa sets flatter.","Pataras repris : sur un gréement en tête il touche peu la GV ; il tend l'étai pour qu'il ne fléchisse pas et que le génois soit plus plat."],"Tensor suelto.":["Adjuster off.","Pataras choqué."],"Tensor un poco cazado: lo justo para que el estay de proa no se combe.":["Adjuster slightly on: just enough to stop the forestay sagging.","Pataras un peu repris : juste assez pour que l'étai ne fléchisse pas."],"Pásalo a orejas con el tangón: a barlovento, opuesto a la mayor.":["Goose-wing it on the pole: to windward, opposite the main.","Passe-le en ciseaux avec le tangon : au vent, à l'opposé de la GV."],"Tapado por la mayor. Sin tangón, las orejas son inestables: enróllalo o abre a un largo.":["Blanketed by the main. Without a pole, goose-winging is unstable: furl it or come up to a broad reach.","Déventé par la GV. Sans tangon, les ciseaux sont instables : enroule-le ou remonte au grand largue."],"Cazada hasta que la baluma quede a unos centímetros de la cruceta y los catavientos vuelen horizontales.":["Trimmed until the leech is a few centimetres off the spreader and the telltales stream horizontally.","Bordée jusqu'à ce que la chute soit à quelques centimètres de la barre de flèche et que les penons volent à l'horizontale."],"Larga hasta que el catavientos de barlovento se levante y caza un poco.":["Ease until the windward telltale lifts, then trim in a touch.","Choque jusqu'à ce que le penon au vent se soulève, puis reborde un peu."],"Escotero":["Genoa car","Chariot de génois"],"Adelante y, si tienes barber o carril exterior, hacia fuera.":["Forward and, if you have a barber hauler or outboard track, outboard.","Vers l'avant et, si tu as un barber ou un rail extérieur, vers l'extérieur."],"Adelante: más bolsa abajo.":["Forward: more depth down low.","Vers l'avant : plus de creux en bas."],"Atrás: abre la baluma alta y descarga arriba.":["Aft: opens the upper leech and spills pressure up high.","Vers l'arrière : ouvre le haut de la chute et libère la pression en haut."],"Neutro: al orzar, los catavientos alto y bajo flamean a la vez.":["Neutral: when you head up, the top and bottom telltales break together.","Neutre : quand tu lofes, les penons du haut et du bas décrochent ensemble."],"Fijo: si la parte alta flamea antes que la baja, no lo puedes corregir; compensa con la escota.":["Fixed: if the top breaks before the bottom you cannot correct it; compensate with the sheet.","Fixe : si le haut faseye avant le bas tu ne peux pas le corriger ; compense à l'écoute."],"Tensa: sin arrugas, la bolsa adelante.":["On: no wrinkles, depth forward.","Reprise : sans plis, le creux en avant."],"Algo suelta: arrugas leves en el grátil.":["Slightly eased: light wrinkles in the luff.","Un peu choquée : légers plis au guindant."],"§Superficie":["Sail area","Surface"],"Reduce por fases. Al enrollar, adelanta el escotero porque el puño sube y avanza.":["Reduce in stages. When you furl, move the car forward because the clew rises and moves forward.","Réduis par étapes. En enroulant, avance le chariot car le point d'écoute monte et avance."],"Sin rizos":["No reefs","Pas de ris"],"Con {x} kn te tocaría reducir. Tu barco no tiene rizos: reduce génova o arría la mayor.":["At {x} kn you should reduce sail. Your boat has no reefs: furl genoa or drop the main.","Avec {x} nœuds il faudrait réduire. Ton bateau n'a pas de ris : réduis le génois ou affale la GV."],"De momento no hace falta reducir.":["No need to reduce sail for now.","Pas besoin de réduire pour l'instant."],"Vela entera":["Full sail","Toute la toile"],"{o} rizo hacia {k} kn en este rumbo (orientativo). Antes, aplana con los ajustes.":["{o} reef at around {k} kn on this point of sail (rough guide). Before that, flatten with the controls.","{o} ris vers {k} nœuds à cette allure (indicatif). Avant, aplatis avec les réglages."],"A {x} kn en {z} lo orientativo es llevar {o} rizo.":["At {x} kn ({z}) the rough guide is the {o} reef.","À {x} nœuds ({z}), le repère est le {o} ris."],"Ya no te quedan rizos: reduce génova.":["No reefs left: furl the genoa.","Plus de ris disponible : réduis le génois."],"En popa, riza antes de abrir rumbo: para rizar hay que orzar.":["Downwind, reef before you bear away: you have to head up to reef.","Au portant, prends le ris avant d'abattre : pour prendre un ris il faut lofer."],"{o} rizo":["{o} reef","{o} ris"],"Se me va de orzada":["Keeps rounding up","Part au lof"],"Escoro mucho / sufro":["Heeling too much / struggling","Trop de gîte / je souffre"],"No anda, le falta potencia":["Slow, lacks power","Lent, manque de puissance"],"Cae solo (barco blando)":["Bears away by itself (lee helm)","Abat tout seul (bateau mou)"],"Golpea la ola y se para":["Slams into waves and stops","Tape dans la vague et s'arrête"],"Flamea catavientos de barlovento":["Windward telltale flutters","Le penon au vent faseye"],"Flamea catavientos de sotavento":["Leeward telltale flutters","Le penon sous le vent faseye"],"Flamea o vibra la baluma":["Leech flutters or vibrates","La chute faseye ou vibre"],"Para rizar tienes que orzar hasta casi ceñida y el viento aparente sube de golpe: hazlo antes de que suba más.":["To reef you have to head up almost to close-hauled and the apparent wind jumps: do it before it builds further.","Pour prendre un ris il faut lofer presque au près et le vent apparent augmente d'un coup : fais-le avant qu'il ne forcisse."],"Toma el {o} rizo de la mayor":["Take the {o} reef in the main","Prends le {o} ris dans la GV"],"Se va de orzada porque la mayor empuja la popa hacia sotavento. Reducirla primero devuelve el equilibrio al timón.":["It rounds up because the main pushes the stern to leeward. Reducing it first restores balance to the helm.","Il part au lof parce que la GV pousse l'arrière sous le vent. La réduire en premier rééquilibre la barre."],"En aparejo fraccionado la mayor es la vela principal: se riza primero.":["On a fractional rig the main is the primary sail: reef it first.","Sur un gréement fractionné la GV est la voile principale : on la réduit en premier."],"Reduce mayor para bajar escora y timón.":["Reduce the main to cut heel and helm load.","Réduis la GV pour diminuer la gîte et la charge sur la barre."],"Enrolla parte del génova":["Furl some of the genoa","Enroule une partie du génois"],"En aparejo a tope el génova es el motor grande: reducirlo primero baja la escora sin dejar el barco ardiente.":["On a masthead rig the genoa is the main engine: reducing it first cuts heel without leaving the boat with weather helm.","Sur un gréement en tête le génois est le moteur principal : le réduire en premier diminue la gîte sans rendre le bateau ardent."],"Más o menos un tercio (aprox.). Adelanta el escotero al enrollar.":["Roughly a third (approx.). Move the car forward as you furl.","Environ un tiers (approx.). Avance le chariot en enroulant."],"Toma el {o} rizo":["Take the {o} reef","Prends le {o} ris"],"Si con el primero sigues escorando de más o con mucho timón.":["If with the first one you are still over-heeling or carrying a lot of helm.","Si avec le premier tu gîtes encore trop ou si la barre est encore dure."],"Enrolla más el génova":["Furl more genoa","Enroule davantage le génois"],"Hasta la mitad o menos (aprox.); un génova muy enrollado pierde forma, por eso va al final.":["To half or less (approx.); a heavily furled genoa loses shape, which is why it comes last.","Jusqu'à la moitié ou moins (approx.) ; un génois très enroulé perd sa forme, c'est pour ça qu'il vient en dernier."],"Último escalón de mayor.":["Last step for the main.","Dernier palier pour la GV."],"Si aún sufres: cambia el plan":["Still struggling: change the plan","Toujours en difficulté : change de plan"],"Abre rumbo, ponte al pairo o vuelve a puerto. Chalecos y líneas de vida puestos.":["Bear away, heave to or head back to port. Lifejackets on and jacklines rigged.","Abats, mets-toi à la cape ou rentre au port. Gilets et lignes de vie en place."],"Seguridad":["Safety","Sécurité"],"Reducir":["Reduce","Réduire"],"Ajuste":["Trim","Réglage"],"Timón":["Helm","Barre"],"Peso":["Weight","Poids"],"Revisión":["Check","Vérif."],"Ve fino en las rachas":["Feather up in the gusts","Lofe finement dans les rafales"],"Orza un pelo cuando entra la racha, hasta que flamee el grátil del génova, y vuelve a caer al pasar. Si llevas mucho timón metido todo el rato, el barco te pide reducir.":["Head up a touch as the gust hits, until the genoa luff starts to flutter, and bear away again once it passes. If you are carrying lots of helm all the time, the boat is asking you to reduce sail.","Lofe un poil quand la rafale arrive, jusqu'à ce que le guindant du génois faseye, et abats de nouveau quand elle passe. Si tu as beaucoup de barre en permanence, le bateau te demande de réduire."],"Caza el tensor del estay de popa":["Tension the backstay adjuster","Reprends le pataras"],"Curva el mástil, aplana la mayor y abre la baluma alta. El estay de proa se tensa como consecuencia y el génova se aplana.":["It bends the mast, flattens the main and opens the upper leech. The forestay tightens as a result and the genoa flattens.","Il cintre le mât, aplatit la GV et ouvre le haut de la chute. L'étai se tend en conséquence et le génois s'aplatit."],"En aparejo a tope casi no toca la mayor: sirve para que el estay de proa no se combe y el génova vaya más plano.":["On a masthead rig it barely affects the main: it stops the forestay sagging so the genoa sets flatter.","Sur un gréement en tête il touche peu la GV : il empêche l'étai de fléchir pour que le génois soit plus plat."],"Tensa el cunningham":["Tension the cunningham","Reprends le cunningham"],"Tensa la driza de mayor":["Tension the main halyard","Reprends la drisse de GV"],"Grátil tenso: la bolsa va hacia delante y la baluma alta se abre y suelta presión.":["Tight luff: the depth moves forward and the upper leech opens and spills pressure.","Guindant tendu : le creux avance et le haut de la chute s'ouvre et libère la pression."],"Caza el pujamen a tope":["Outhaul hard on","Étarque la bordure à fond"],"Aplana el tercio bajo de la mayor.":["Flattens the lower third of the main.","Aplatit le tiers inférieur de la GV."],"Baja el carro a sotavento":["Drop the traveller to leeward","Descends le chariot sous le vent"],"En cada racha, antes de tocar la escota: la botavara se abre sin que se abra la baluma.":["In every gust, before touching the sheet: the boom moves out without the leech opening.","À chaque rafale, avant de toucher à l'écoute : la bôme s'écarte sans que la chute s'ouvre."],"Larga escota en las rachas con la contra tensa":["Ease the sheet in gusts with the vang on","Choque l'écoute dans les rafales avec le hale-bas repris"],"Sin carro, la escota es tu válvula. La contra evita que la botavara suba y la vela se embolse.":["Without a traveller, the sheet is your release valve. The vang stops the boom lifting and the sail bagging out.","Sans chariot, l'écoute est ta soupape. Le hale-bas empêche la bôme de monter et la voile de se creuser."],"Retrasa el escotero del génova":["Move the genoa car aft","Recule le chariot de génois"],"Abre la baluma alta del génova y descarga arriba.":["Opens the upper leech of the genoa and spills pressure up high.","Ouvre le haut de la chute du génois et libère la pression en haut."],"Deja flamear el grátil de la mayor en rachas":["Let the main luff flutter in gusts","Laisse faseyer le guindant de GV dans les rafales"],"Que la parte delantera de la mayor se acueste por el génova es aceptable: sueltas potencia sin perder rumbo.":["It is fine for the front of the main to be backwinded by the genoa: you shed power without losing your course.","C'est acceptable que l'avant de la GV soit déventé par le génois : tu perds de la puissance sans perdre ton cap."],"Larga la contra en las rachas":["Ease the vang in the gusts","Choque le hale-bas dans les rafales"],"Abre la baluma alta y suelta la presión que tumba el barco. Es lo más rápido para evitar una orzada a rumbos abiertos.":["It opens the upper leech and releases the pressure that lays the boat over. It is the fastest way to avoid a round-up off the wind.","Ça ouvre le haut de la chute et libère la pression qui couche le bateau. C'est le moyen le plus rapide d'éviter un départ au lof aux allures portantes."],"Larga escota de mayor en la racha":["Ease the mainsheet in the gust","Choque l'écoute de GV dans la rafale"],"Aunque flamee. Vuelve a cazar al pasar.":["Even if it flutters. Trim back in once it passes.","Même si elle faseye. Reborde quand elle passe."],"Carro a sotavento del todo":["Traveller all the way to leeward","Chariot tout sous le vent"],"Abre la botavara al máximo.":["Lets the boom out as far as possible.","Ouvre la bôme au maximum."],"Cae en las rachas":["Bear away in the gusts","Abats dans les rafales"],"A rumbos abiertos, aleja la proa del viento cuando entra la racha y vuelve al rumbo al pasar. Anticípate: con el timón a tope ya es tarde.":["Off the wind, turn the bow away from the wind as the gust arrives and come back to course once it passes. Anticipate: once the helm is hard over it is too late.","Aux allures portantes, éloigne l'étrave du vent quand la rafale arrive et reviens au cap quand elle passe. Anticipe : barre à fond, c'est déjà trop tard."],"Aplana la mayor":["Flatten the main","Aplatis la GV"],"Grátil y pujamen tensos, y el tensor del estay de popa cazado.":["Luff and outhaul tight, and backstay adjuster on.","Guindant et bordure tendus, et pataras repris."],"Grátil y pujamen tensos.":["Luff and outhaul tight.","Guindant et bordure tendus."],"Escotero del génova algo atrás":["Genoa car slightly aft","Chariot de génois un peu en arrière"],"Abre la parte alta del génova.":["Opens the top of the genoa.","Ouvre le haut du génois."],"Pon una retenida en la botavara":["Rig a boom preventer","Installe une retenue de bôme"],"Evita una trasluchada involuntaria. Con viento fuerte en popa es lo primero.":["It prevents an accidental gybe. In strong wind downwind it comes first.","Elle évite un empannage involontaire. Avec du vent fort au portant, c'est la priorité."],"Contra tensa (moderada)":["Vang on (moderately)","Hale-bas repris (modérément)"],"Que la botavara no suba: si la parte alta se abre, el barco balancea.":["Keep the boom from lifting: if the top opens up, the boat rolls.","Que la bôme ne monte pas : si le haut s'ouvre, le bateau roule."],"No largues la mayor contra los obenques":["Do not let the main out against the shrouds","Ne choque pas la GV contre les haubans"],"Déjala un poco antes; apoyada se roza y empuja hacia la orzada.":["Stop a little short; resting on them it chafes and pushes the boat towards a round-up.","Arrête-toi un peu avant ; appuyée elle s'use et pousse vers le départ au lof."],"Timonea con la ola":["Steer with the waves","Barre avec la vague"],"Corrige pronto y poco y deja que la popa siga a la ola. Si vas por la aleta, no te pongas justo en popa: riesgo de trasluchar.":["Correct early and small and let the stern follow the wave. With the wind on the quarter, do not go dead downwind: risk of gybing.","Corrige tôt et peu et laisse l'arrière suivre la vague. Avec le vent par la hanche, ne te mets pas plein vent arrière : risque d'empannage."],"Génova a orejas con tangón":["Goose-wing the genoa on the pole","Génois en ciseaux avec le tangon"],"Enrolla el génova":["Furl the genoa","Enroule le génois"],"En popa el génova tapado no aporta y da tirones.":["Downwind a blanketed genoa adds nothing and snaps.","Au portant un génois déventé n'apporte rien et donne des coups."],"Suelta el tensor del estay de popa":["Ease the backstay adjuster","Choque le pataras"],"Más bolsa en las velas.":["More depth in the sails.","Plus de creux dans les voiles."],"Suelta el cunningham":["Ease the cunningham","Choque le cunningham"],"Afloja un poco la driza":["Ease the halyard a little","Choque un peu la drisse"],"Arrugas leves en el grátil están bien con poco viento.":["Light wrinkles in the luff are fine in light air.","De légers plis au guindant sont acceptables dans le petit temps."],"Suelta algo el pujamen":["Ease the outhaul a little","Choque un peu la bordure"],"Bolsa en la parte baja = potencia.":["Depth in the lower part = power.","Du creux en bas = de la puissance."],"Carro a barlovento, escota algo suelta":["Traveller to windward, sheet slightly eased","Chariot au vent, écoute un peu choquée"],"Botavara en el eje y la baluma alta un poco abierta: el flujo no se despega.":["Boom on the centreline and the upper leech slightly open: the flow stays attached.","Bôme dans l'axe et haut de la chute un peu ouvert : l'écoulement ne décroche pas."],"Larga hasta que flamee y caza un poco":["Ease until it flutters, then trim in a touch","Choque jusqu'à ce que ça faseye, puis reborde un peu"],"A rumbos abiertos se suele ir demasiado cazado.":["Off the wind people tend to over-trim.","Aux allures portantes on a tendance à trop border."],"Adelanta el escotero del génova":["Move the genoa car forward","Avance le chariot de génois"],"Más bolsa abajo en el génova.":["More depth low down in the genoa.","Plus de creux en bas du génois."],"Abre 5° el rumbo":["Bear away 5°","Abats de 5°"],"No vayas tan fino: primero velocidad, luego altura.":["Do not point so high: speed first, then height.","Ne serre pas autant : d'abord la vitesse, ensuite le cap."],"Quita rizos y desenrolla":["Shake out reefs and unfurl","Largue les ris et déroule"],"Si llevas vela reducida de antes, ya no hace falta.":["If you are still reefed from earlier, you no longer need to be.","Si tu as encore réduit de tout à l'heure, ce n'est plus nécessaire."],"Más mayor":["More main","Plus de GV"],"Caza escota y sube el carro a barlovento: la mayor empuja la proa hacia el viento.":["Trim the sheet and bring the traveller to windward: the main pushes the bow into the wind.","Borde l'écoute et monte le chariot au vent : la GV pousse l'étrave vers le vent."],"Caza escota: la mayor empuja la proa hacia el viento.":["Trim the sheet: the main pushes the bow into the wind.","Borde l'écoute : la GV pousse l'étrave vers le vent."],"Menos génova si va entero y la mayor rizada":["Less genoa if it is full and the main is reefed","Moins de génois s'il est entier et la GV arisée"],"Equilibra: un génova grande con la mayor reducida hace que el barco caiga.":["Balance it: a big genoa with a reduced main makes the boat bear away.","Équilibre : un grand génois avec une GV réduite fait abattre le bateau."],"Escora ligera con poco viento":["Slight heel in light air","Légère gîte dans le petit temps"],"Tripulación a sotavento: con algo de escora el barco coge un poco de timón y lo nota mejor.":["Crew to leeward: with a little heel the boat picks up some helm and gives better feel.","Équipage sous le vent : avec un peu de gîte le bateau prend un peu de barre et donne plus de sensations."],"Con ola no se puede ir tan fino: busca velocidad.":["In waves you cannot point as high: look for speed.","Dans la vague on ne peut pas serrer autant : cherche la vitesse."],"Más bolsa":["More depth","Plus de creux"],"Pujamen algo suelto y tensor del estay de popa largado: la vela empuja más en la ola.":["Outhaul slightly eased and backstay adjuster off: the sail drives harder through the waves.","Bordure un peu choquée et pataras choqué : la voile pousse davantage dans la vague."],"Pujamen algo suelto: la vela empuja más en la ola.":["Outhaul slightly eased: the sail drives harder through the waves.","Bordure un peu choquée : la voile pousse davantage dans la vague."],"Adelanta el escotero":["Move the car forward","Avance le chariot"],"Génova con más bolsa abajo.":["Genoa with more depth low down.","Génois avec plus de creux en bas."],"Abre la baluma (twist)":["Open the leech (twist)","Ouvre la chute (vrillage)"],"Escota de mayor un poco suelta: aguanta mejor los cambios de velocidad.":["Mainsheet slightly eased: copes better with changes in speed.","Écoute de GV un peu choquée : encaisse mieux les variations de vitesse."],"Orza en la subida, cae en la bajada":["Head up on the way up, bear away on the way down","Lofe à la montée, abats à la descente"],"Sube un poco al encarar la ola y cae para coger velocidad al bajarla.":["Head up a little as you meet the wave and bear away to pick up speed going down it.","Lofe un peu en attaquant la vague et abats pour prendre de la vitesse en la descendant."],"Cae un poco o caza la escota":["Bear away a little or trim the sheet","Abats un peu ou borde l'écoute"],"Flamea el de barlovento: vas demasiado orzado o la vela está demasiado largada.":["The windward one flutters: you are pointing too high or the sail is eased too far.","Celui au vent faseye : tu es trop lofé ou la voile est trop choquée."],"Si el alto rompe antes que el bajo: escotero adelante":["If the top one breaks before the bottom: car forward","Si celui du haut décroche avant celui du bas : chariot vers l'avant"],"El punto de escota está demasiado atrás y la parte alta abre de más.":["The sheet lead is too far aft and the top twists open too much.","Le point de tire est trop en arrière et le haut s'ouvre trop."],"Si el bajo rompe antes que el alto: escotero atrás":["If the bottom one breaks before the top: car aft","Si celui du bas décroche avant celui du haut : chariot vers l'arrière"],"El punto de escota está demasiado adelante.":["The sheet lead is too far forward.","Le point de tire est trop en avant."],"Orza un poco o larga la escota":["Head up a little or ease the sheet","Lofe un peu ou choque l'écoute"],"Flamea el de sotavento: vas demasiado caído o la vela está demasiado cazada y el flujo se despega.":["The leeward one flutters: you are sailing too low or the sail is over-trimmed and the flow is stalling.","Celui sous le vent faseye : tu es trop abattu ou la voile est trop bordée et l'écoulement décroche."],"Objetivo: los dos horizontales":["Goal: both horizontal","Objectif : les deux à l'horizontale"],"Ese es el trimado bueno. En ceñida, el de barlovento puede levantarse a ratos.":["That is good trim. Close-hauled, the windward one can lift now and then.","C'est le bon réglage. Au près, celui au vent peut se soulever de temps en temps."],"Tensa el cabo de baluma":["Tighten the leech line","Reprends le hale-bas de chute"],"Lo justo para que pare de vibrar. Si te pasas, la baluma hace gancho hacia barlovento y frena.":["Just enough to stop it vibrating. Overdo it and the leech hooks to windward and slows you down.","Juste assez pour qu'elle arrête de vibrer. Si tu en fais trop, la chute crochète au vent et freine."],"Revisa la escota":["Check the sheet","Vérifie l'écoute"],"Una baluma que flamea en la mayor puede ser escota demasiado suelta o contra floja.":["A fluttering main leech can mean the sheet is too eased or the vang is slack.","Une chute de GV qui faseye peut venir d'une écoute trop choquée ou d'un hale-bas mou."],"Una baluma que flamea en la mayor puede ser escota demasiado suelta.":["A fluttering main leech can mean the sheet is too eased.","Une chute de GV qui faseye peut venir d'une écoute trop choquée."],"Si no para":["If it does not stop","Si ça ne s'arrête pas"],"Vela vieja o estirada: es desgaste, no trimado.":["Old or stretched sail: it is wear, not trim.","Voile vieille ou détendue : c'est de l'usure, pas du réglage."],"Ahora":["Now","Maintenant"],"Ya toca":["Due now","C'est le moment"],"Si no basta":["If not enough","Si insuffisant"],"El barco se va de orzada: tiene demasiada potencia arriba y atrás. Primero aplana y descarga, luego reduce.":["The boat rounds up: too much power up high and aft. Flatten and depower first, then reduce sail.","Le bateau part au lof : trop de puissance en haut et à l'arrière. Aplatis et dévente d'abord, puis réduis."],"Exceso de potencia. El orden va de lo que no cuesta velocidad a lo que sí: aplanar, descargar y, al final, reducir.":["Overpowered. The order goes from what costs no speed to what does: flatten, depower and, last, reduce sail.","Trop de puissance. L'ordre va de ce qui ne coûte pas de vitesse à ce qui en coûte : aplatir, déventer et, en dernier, réduire."],"Falta potencia: dale bolsa a las velas y abre un poco el rumbo.":["Underpowered: give the sails more depth and bear away a little.","Manque de puissance : donne du creux aux voiles et abats un peu."],"El barco cae solo: el centro vélico está demasiado a proa.":["The boat bears away by itself: the centre of effort is too far forward.","Le bateau abat tout seul : le centre vélique est trop en avant."],"Con ola el barco necesita potencia para atravesarla, no velas planas.":["In waves the boat needs power to punch through, not flat sails.","Dans la vague le bateau a besoin de puissance pour passer, pas de voiles plates."],"Catavientos de barlovento flameando.":["Windward telltale fluttering.","Penon au vent qui faseye."],"Catavientos de sotavento flameando.":["Leeward telltale fluttering.","Penon sous le vent qui faseye."],"Baluma que vibra o flamea.":["Leech vibrating or fluttering.","Chute qui vibre ou faseye."],"Checklist":["Checklist","Checklist"],"Describe lo que te pasa o elige una opción.":["Describe what is happening or pick an option.","Décris ce qui se passe ou choisis une option."],"Umbrales para {z} a {x} kn (orientativos).":["Thresholds for {z} at {x} kn (rough guide).","Seuils pour : {z}, {x} nœuds (indicatifs)."],"Hecho":["Done","Fait"],"{n} pasos omitidos porque tu barco no tiene: {r}.":["{n} steps skipped because your boat has no: {r}.","{n} étapes ignorées car ton bateau n'a pas : {r}."],"{n} paso omitido porque tu barco no tiene: {r}.":["{n} step skipped because your boat has no: {r}.","{n} étape ignorée car ton bateau n'a pas : {r}."],"{n}/{m} hechos":["{n}/{m} done","{n}/{m} faits"],"No he reconocido nada. Prueba con el viento en nudos, el rumbo (ceñida, través, largo, popa) y qué notas, o elige una opción abajo.":["I did not recognise anything. Try the wind in knots, your point of sail (close-hauled, beam reach, broad reach, downwind) and what you notice, or pick an option below.","Je n'ai rien reconnu. Essaie avec le vent en nœuds, l'allure (près, travers, largue, vent arrière) et ce que tu remarques, ou choisis une option ci-dessous."],"Problema:":["Problem:","Problème :"],"Rumbo:":["Point of sail:","Allure :"],"Viento:":["Wind:","Vent :"],"{a}° aparente":["{a}° apparent","{a}° apparent"],"el del control ({x} kn)":["the one on the slider ({x} kn)","celui du curseur ({x} nœuds)"],"el del dial ({z}, {a}° aparente)":["the one on the dial ({z}, {a}° apparent)","celle du cadran ({z}, {a}° apparent)"],"no reconocido; elige uno abajo":["not recognised; pick one below","non reconnu ; choisis-en un ci-dessous"],"Entiendo →":["Understood →","Compris →"],"Ponle nombre al barco para guardarlo":["Give the boat a name to save it","Donne un nom au bateau pour l'enregistrer"],"No hay espacio para más barcos: borra alguno.":["No room for more boats: delete one.","Plus de place pour d'autres bateaux : supprimes-en un."],"No se ha podido guardar. Inténtalo de nuevo.":["Could not save. Try again.","Impossible d'enregistrer. Réessaie."],"Cargando…":["Loading…","Chargement…"],"Guardado":["Saved","Enregistré"],"Cambios sin guardar":["Unsaved changes","Modifications non enregistrées"],"Sin guardar":["Not saved","Non enregistré"],"Guardar cambios":["Save changes","Enregistrer"],"Guardar barco":["Save boat","Enregistrer le bateau"],"Se guardan en tu cuenta: los verás al abrir esta página en cualquier dispositivo.":["Saved to your account: you will see them when you open this page on any device.","Enregistrés dans ton compte : tu les retrouveras en ouvrant cette page sur n'importe quel appareil."],"Se guardan solo en este navegador. Si borras los datos del navegador, se pierden.":["Saved in this browser only. If you clear the browser data, they are lost.","Enregistrés uniquement dans ce navigateur. Si tu effaces les données du navigateur, ils sont perdus."],"Aún no tienes barcos guardados. Rellena la ficha y pulsa <b>Guardar barco</b>.":["You have no saved boats yet. Fill in the details and press <b>Save boat</b>.","Tu n'as pas encore de bateau enregistré. Remplis la fiche et appuie sur <b>Enregistrer le bateau</b>."],"Cargando tus barcos…":["Loading your boats…","Chargement de tes bateaux…"],"Activo":["Active","Actif"],"Eslora":["Length","Longueur"],"Manga":["Beam","Largeur"],"{n} rizo":["{n} reef","{n} ris"],"{n} rizos":["{n} reefs","{n} ris"],"Sin nombre":["Unnamed","Sans nom"],"Usar este":["Use this one","Utiliser"],"Ir a Trimado":["Go to Trim","Aller au réglage"],"Sí, borrar":["Yes, delete","Oui, supprimer"],"Cancelar":["Cancel","Annuler"],"Borrar":["Delete","Supprimer"],"(editado)":["(edited)","(modifié)"],"No consigo cargar tus barcos todavía. Puedes seguir usando la ficha; se cargarán cuando haya conexión.":["Your boats have not loaded yet. You can keep using the details form; they will load once there is a connection.","Tes bateaux ne sont pas encore chargés. Tu peux continuer à utiliser la fiche ; ils se chargeront dès que la connexion reviendra."],"Ahora: {z} · {a}° aparente (≈{r}° real) · amura de {s} · {x} kn.":["Now: {z} · {a}° apparent (≈{r}° true) · {s} tack · {x} kn.","Maintenant : {z} · {a}° apparent (≈{r}° réel) · {s} amures · {x} nœuds."],"Barco sin guardar":["Unsaved boat","Bateau non enregistré"],"Eslora fuera del rango de datos ({a} a {b}): la polar es una extrapolación.":["Length outside the data range ({a} to {b}): the polar is an extrapolation.","Longueur hors de la plage des données ({a} à {b}) : la polaire est une extrapolation."],"Manga poco habitual para esa eslora: revisa los datos.":["Unusual beam for that length: check the figures.","Largeur inhabituelle pour cette longueur : vérifie les données."],"Por debajo de 4 kn el modelo no tiene datos: se usa la curva de 4 kn.":["Below 4 kn the model has no data: the 4 kn curve is used.","En dessous de 4 nœuds le modèle n'a pas de données : on utilise la courbe de 4 nœuds."],"Por encima de 24 kn el modelo no tiene datos: se usa la curva de 24 kn.":["Above 24 kn the model has no data: the 24 kn curve is used.","Au-dessus de 24 nœuds le modèle n'a pas de données : on utilise la courbe de 24 nœuds."],"real":["true","réel"],"sin viento":["no wind","pas de vent"],"zona muerta":["no-go zone","zone morte"],"TWA {a}°: más cerrado que la ceñida óptima, cae":["TWA {a}°: higher than the best close-hauled angle, bear away","TWA {a}° : plus serré que le près optimal, abats"],"TWA {a}° · aparente {w} kn":["TWA {a}° · apparent {w} kn","TWA {a}° · apparent {w} nœuds"],"Vas al {p} % de la polar estimada ({v} kn).":["You are at {p}% of the estimated polar ({v} kn).","Tu es à {p} % de la polaire estimée ({v} nœuds)."],"Por encima: corriente a favor, ola o el modelo infravalora tu barco.":["Above it: favourable current, waves, or the model underrates your boat.","Au-dessus : courant favorable, vagues, ou le modèle sous-estime ton bateau."],"En polar: no toques nada.":["On the polar: leave everything as it is.","Sur la polaire : ne touche à rien."],"Con este viento, ir lento suele ser exceso de escora, no falta de potencia.":["In this much wind, being slow usually means too much heel, not too little power.","Avec ce vent, aller lentement vient souvent d'un excès de gîte, pas d'un manque de puissance."],"Le falta potencia o el trimado no está fino.":["It lacks power or the trim is off.","Il manque de puissance ou le réglage n'est pas fin."],"Ver checklist «{p}»":["See checklist “{p}”","Voir la checklist « {p} »"],"Mete la velocidad en el agua (corredera), no la del GPS: la corriente engaña.":["Enter speed through the water (log), not GPS speed: current is misleading.","Entre la vitesse surface (loch), pas celle du GPS : le courant fausse tout."],"Velocidades de barco limpio y bien trimado, sin spinnaker. Úsalo para compararte contigo mismo, no como nota absoluta.":["Speeds for a clean, well-trimmed boat without a spinnaker. Use it to compare against yourself, not as an absolute score.","Vitesses d'un bateau propre et bien réglé, sans spi. Sers-t'en pour te comparer à toi-même, pas comme une note absolue."],"Alta":["Top","Haut"],"Media":["Middle","Milieu"],"Baja":["Bottom","Bas"],"Barlovento":["Windward","Au vent"],"Sotavento":["Leeward","Sous le vent"],"Lanita de baluma":["Leech telltale","Penon de chute"],"Vuela":["Streaming","Vole"],"Flamea":["Fluttering","Faseye"],"Se esconde":["Hidden (stalled)","Se cache (décroche)"],"Diagnóstico":["Diagnosis","Diagnostic"],"Estás en zona muerta: las lanitas no te dicen nada hasta que caigas a 40–45°.":["You are in the no-go zone: the telltales tell you nothing until you bear away to 40–45°.","Tu es dans la zone morte : les penons ne te diront rien tant que tu n'auras pas abattu à 40–45°."],"En popa el génova va tapado y sus lanitas no son fiables. Guíate por la mayor y el ángulo.":["Downwind the genoa is blanketed and its telltales are unreliable. Go by the main and the angle.","Au portant le génois est déventé et ses penons ne sont pas fiables. Fie-toi à la GV et à l'angle."],"<span class=\"good\">Génova: las seis vuelan. Trimado bueno.</span>":["<span class=\"good\">Genoa: all six are streaming. Good trim.</span>","<span class=\"good\">Génois : les six volent. Bon réglage.</span>"],"Barlovento y sotavento flamean a la vez: viento muy flojo o sucio (tapado por la mayor u otro barco). Cae un poco para ganar velocidad y dale bolsa.":["Windward and leeward flutter together: very light or dirty air (blanketed by the main or another boat). Bear away a little to build speed and add depth.","Au vent et sous le vent faseyent ensemble : vent très faible ou perturbé (déventé par la GV ou un autre bateau). Abats un peu pour prendre de la vitesse et donne du creux."],"<b>Adelanta el escotero.</b> La parte alta abre de más (rompe arriba antes que abajo). Muévelo hasta que, al orzar, las tres de barlovento rompan a la vez.":["<b>Move the car forward.</b> The top twists open too much (breaks up high before down low). Move it until all three windward telltales break together as you head up.","<b>Avance le chariot.</b> Le haut vrille trop (décroche en haut avant le bas). Déplace-le jusqu'à ce que, en lofant, les trois penons au vent décrochent ensemble."],"<b>La parte alta abre de más.</b> Sin escotero ajustable, caza un pelo de escota y acepta que la baja vaya algo cazada.":["<b>The top twists open too much.</b> Without an adjustable car, trim the sheet a touch and accept the bottom being slightly over-trimmed.","<b>Le haut vrille trop.</b> Sans chariot réglable, reborde un poil l'écoute et accepte que le bas soit un peu trop bordé."],"<b>Retrasa el escotero.</b> La parte alta va cerrada respecto a la baja. Muévelo hasta que las tres rompan a la vez.":["<b>Move the car aft.</b> The top is closed compared with the bottom. Move it until all three break together.","<b>Recule le chariot.</b> Le haut est fermé par rapport au bas. Déplace-le jusqu'à ce que les trois décrochent ensemble."],"<b>La parte alta va cerrada.</b> Sin escotero ajustable, larga un pelo de escota.":["<b>The top is closed.</b> Without an adjustable car, ease the sheet a touch.","<b>Le haut est fermé.</b> Sans chariot réglable, choque un poil l'écoute."],"<b>Cae un poco o caza la escota del génova.</b> Flamea barlovento: vas demasiado orzado o la vela demasiado largada.":["<b>Bear away a little or trim the genoa sheet.</b> Windward fluttering: pointing too high or the sail is eased too far.","<b>Abats un peu ou borde l'écoute de génois.</b> Penon au vent qui faseye : tu es trop lofé ou la voile est trop choquée."],"<b>Caza la escota del génova.</b> A rumbos abiertos, primero vela y luego timón.":["<b>Trim the genoa sheet.</b> Off the wind, sail first, then helm.","<b>Borde l'écoute de génois.</b> Aux allures portantes, d'abord la voile, ensuite la barre."],"<b>Orza un poco o larga la escota.</b> Flamea sotavento: el flujo se despega, vas caído o sobrecazado.":["<b>Head up a little or ease the sheet.</b> Leeward fluttering: the flow is stalling, you are too low or over-trimmed.","<b>Lofe un peu ou choque l'écoute.</b> Penon sous le vent qui faseye : l'écoulement décroche, tu es trop abattu ou trop bordé."],"<b>Larga la escota del génova</b> hasta que la de barlovento se levante y caza un poco.":["<b>Ease the genoa sheet</b> until the windward one lifts, then trim in a touch.","<b>Choque l'écoute de génois</b> jusqu'à ce que le penon au vent se soulève, puis reborde un peu."],"Las lanitas se compensan entre alturas: retoca el escotero hasta que las tres rompan a la vez al orzar.":["The telltales cancel out between heights: fine-tune the car until all three break together as you head up.","Les penons se compensent entre les hauteurs : affine le chariot jusqu'à ce que les trois décrochent ensemble en lofant."],"En popa las lanitas de baluma casi siempre se esconden: no son fiables.":["Downwind the leech telltales nearly always stall: they are unreliable.","Au portant les penons de chute décrochent presque toujours : ils ne sont pas fiables."],"<span class=\"good\">Mayor: la baluma descarga.</span> En ceñida, si la alta vuela siempre, puedes cazar un pelo más: lo ideal es que se esconda a ratos.":["<span class=\"good\">Main: the leech is releasing.</span> Close-hauled, if the top one streams all the time you can trim a touch harder: ideally it stalls now and then.","<span class=\"good\">GV : la chute dégage bien.</span> Au près, si celui du haut vole tout le temps tu peux border un poil plus : l'idéal est qu'il se cache de temps en temps."],"<span class=\"good\">Mayor: la baluma descarga bien.</span>":["<span class=\"good\">Main: the leech is releasing well.</span>","<span class=\"good\">GV : la chute dégage bien.</span>"],"<b>Mayor sobrecazada.</b> Larga escota hasta que vuelvan a salir y sube el carro a barlovento para mantener la botavara en el eje.":["<b>Main over-trimmed.</b> Ease the sheet until they stream again and bring the traveller to windward to keep the boom on the centreline.","<b>GV trop bordée.</b> Choque l'écoute jusqu'à ce qu'ils volent à nouveau et monte le chariot au vent pour garder la bôme dans l'axe."],"<b>Mayor sobrecazada.</b> Larga escota hasta que vuelvan a salir.":["<b>Main over-trimmed.</b> Ease the sheet until they stream again.","<b>GV trop bordée.</b> Choque l'écoute jusqu'à ce qu'ils volent à nouveau."],"<b>Baluma alta y media cerradas.</b>":["<b>Upper and middle leech closed.</b>","<b>Haut et milieu de la chute fermés.</b>"],"<b>Baluma alta cerrada.</b>":["<b>Upper leech closed.</b>","<b>Haut de la chute fermé.</b>"],"Larga un poco de escota y sube el carro a barlovento.":["Ease the sheet a little and bring the traveller to windward.","Choque un peu l'écoute et monte le chariot au vent."],"Larga un poco de escota.":["Ease the sheet a little.","Choque un peu l'écoute."],"Con viento, cazar el tensor del estay de popa también la abre.":["In a breeze, tensioning the backstay adjuster opens it too.","Dans la brise, reprendre le pataras l'ouvre aussi."],"Afloja la contra para que la parte alta abra.":["Ease the vang so the top can open.","Choque le hale-bas pour que le haut s'ouvre."],"<b>Parte baja ahogada.</b>":["<b>Lower part stalled.</b>","<b>Bas étouffé.</b>"],"Caza el pujamen para aplanar abajo.":["Tighten the outhaul to flatten the bottom.","Étarque la bordure pour aplatir le bas."],"Larga un pelo de escota.":["Ease the sheet a touch.","Choque un poil l'écoute."],"<b>Revisa la escota de mayor:</b> larga un pelo y mira si salen.":["<b>Check the mainsheet:</b> ease a touch and see if they start streaming.","<b>Vérifie l'écoute de GV :</b> choque un poil et regarde s'ils se remettent à voler."],"Barco activo":["Active boat","Bateau actif"],"O elige el problema":["Or pick the problem","Ou choisis le problème"],"Idioma":["Language","Langue"],"Auto":["Auto","Auto"],"Día":["Day","Jour"],"Noche":["Night","Nuit"],"Tema":["Theme","Thème"],"Prototipo v3.1":["Prototype v3.1","Prototype v3.1"],"Arrastra el marcador de viento: el lado marca la amura":["Drag the wind marker: the side sets the tack","Fais glisser le repère de vent : le côté indique les amures"],"Curvas azules: 6, 10, 14 y 20 kn de viento real (más oscura, más viento). Línea discontinua: tu viento ahora, con tu punto. Anillos en nudos de barco; líneas punteadas: ángulos óptimos de ceñida y popa.":["Blue curves: 6, 10, 14 and 20 kn of true wind (darker = more wind). Dashed line: your wind now, with your point. Rings in boat-speed knots; dotted lines: best upwind and downwind angles.","Courbes bleues : 6, 10, 14 et 20 nœuds de vent réel (plus foncé = plus de vent). Trait discontinu : ton vent actuel, avec ton point. Anneaux en nœuds de vitesse bateau ; pointillés : angles optimaux au près et au portant."],"Si no basta, reduce vela":["If that is not enough, reduce sail","Si ça ne suffit pas, réduis la toile"],"Entendido:":["Understood:","Compris :"],"{z} con {a}° de aparente, amura de {s}.":["{z}, {a}° apparent, {s} tack.","{z}, {a}° apparent, {s} amures."],"Qué hacer":["What to do","Que faire"],"Aparente":["Apparent","Apparent"],"Real":["True","Réel"],"Velocidad en el agua":["Speed through water","Vitesse surface"],"kn":["kn","nd"],"Cómo se calcula":["How it is calculated","Comment c'est calculé"],"Mediana de las predicciones VPP de 73 cruceros sin spinnaker, de 8,3 a 15,4 m y con certificado ORC (datos públicos en github.com/jieter/orc-data), escalada por eslora. Frente a esos VPP el error típico es del 3 %; en 9 de cada 10 casos, menos del 11 %. La manga no mejoró la predicción y no entra en el cálculo.":["Median of the VPP predictions for 73 non-spinnaker cruisers of 8.3 to 15.4 m with an ORC certificate (public data at github.com/jieter/orc-data), scaled by length. Against those VPPs the typical error is 3%; in 9 out of 10 cases, under 11%. Beam did not improve the prediction and is not used.","Médiane des prédictions VPP de 73 croiseurs sans spi de 8,3 à 15,4 m avec certificat ORC (données publiques sur github.com/jieter/orc-data), mise à l'échelle selon la longueur. Par rapport à ces VPP l'erreur typique est de 3 % ; dans 9 cas sur 10, moins de 11 %. La largeur n'a pas amélioré la prédiction et n'est pas utilisée."],"Azul: 6, 10, 14 y 20 kn de viento real, más oscuro cuanto más viento. Discontinua: tu viento ahora. Punteadas: ángulos óptimos de ceñida y popa.":["Blue: 6, 10, 14 and 20 kn of true wind, darker with more wind. Dashed: your wind now. Dotted: best upwind and downwind angles.","Bleu : 6, 10, 14 et 20 nœuds de vent réel, plus foncé avec plus de vent. Discontinu : ton vent actuel. Pointillés : angles optimaux au près et au portant."],"Restablecer":["Reset","Réinitialiser"],"Por ejemplo:":["For example:","Par exemple :"],"Automático":["Automatic","Automatique"],"Prototipo v3.2":["Prototype v3.2","Prototype v3.2"],"Prototipo. Las polares son estimaciones y los umbrales de rizo, orientativos: si estás pensando en rizar, riza.":["Prototype. Polars are estimates and reefing thresholds are rough guides: if you are thinking about reefing, reef.","Prototype. Les polaires sont des estimations et les seuils de ris sont indicatifs : si tu penses à prendre un ris, prends-le."]};
+(function(){
+const S = {
+  cfg:{rig:'tope',carro:true,backstay:false,cunningham:true,pujamen:true,contra:true,escotero:true,enrollador:true,tangon:false,rizos:2},
+  awa:30, side:'estribor', tws:15, problem:'orzada', parsed:null, done:{}
+};
+S.boat={name:'',loa:11,beam:3.7}; S.stw=null;
+S.tt={g:{top:{w:1,l:0},mid:{w:0,l:0},bot:{w:0,l:0}},m:{top:1,mid:0,bot:0}};
+try{const c=JSON.parse(localStorage.getItem('trim-cfg')||'null'); if(c) Object.assign(S.cfg,c);}catch(e){}
+try{const b=JSON.parse(localStorage.getItem('trim-boat')||'null'); if(b) Object.assign(S.boat,b);}catch(e){}
+const saveCfg=()=>{try{localStorage.setItem('trim-cfg',JSON.stringify(S.cfg))}catch(e){}};
+const saveBoat=()=>{try{localStorage.setItem('trim-boat',JSON.stringify(S.boat))}catch(e){}};
+
+/* ---------- Idioma ---------- */
+S.lang='es';
+try{const l=localStorage.getItem('trim-lang'); if(['es','en','fr'].includes(l)) S.lang=l; else {const n=(navigator.language||'').slice(0,2); if(n==='en'||n==='fr') S.lang=n;}}catch(e){}
+function t(s,v){
+  let r;
+  if(S.lang==='es') r=s.charAt(0)==='§'?s.slice(1):s;
+  else { const e=I18N[s]; r=e?e[S.lang==='en'?0:1]:(s.charAt(0)==='§'?s.slice(1):s); }
+  if(v) r=r.replace(/\{(\w+)\}/g,(m,k)=>v[k]!==undefined?v[k]:m);
+  return r;
+}
+const ord=k=>S.lang==='en'?['1st','2nd','3rd'][k-1]||k+'th':S.lang==='fr'?(k===1?'1er':k+'e'):(k===1||k===3?k+'er':k+'º');
+const sideName=s=>s==='estribor'?t('estribor'):t('babor');
+
+/* ---------- Tema (Día / Noche / Auto) ---------- */
+S.theme='auto'; try{const th=localStorage.getItem('trim-theme'); if(['auto','light','dark'].includes(th)) S.theme=th;}catch(e){}
+function applyTheme(){
+  const r=document.documentElement; if(S.theme==='auto') r.removeAttribute('data-mode'); else r.setAttribute('data-mode',S.theme);
+  document.querySelectorAll('#themes button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===S.theme?'true':'false'));
+}
+document.querySelectorAll('#themes button').forEach(b=>b.addEventListener('click',()=>{S.theme=b.dataset.v;try{localStorage.setItem('trim-theme',S.theme)}catch(e){}applyTheme();}));
+applyTheme();
+
+/* ---------- Polar model (ORC VPP, 73 cruceros sin spi) ---------- */
+const PM={"n":73,"exp":0.43,"tws":[4,6,8,10,12,14,16,20,24],"twa":[52,60,75,90,110,120,135,150],"k":[[1.2966,1.7743,2.1389,2.3478,2.4906,2.5776,2.6115,2.6412,2.6223],[1.4191,1.9127,2.2547,2.4487,2.5785,2.6545,2.6914,2.7354,2.7334],[1.5093,2.0276,2.3732,2.5661,2.6819,2.7504,2.8012,2.8803,2.9098],[1.5283,2.039,2.3989,2.614,2.7387,2.8381,2.9189,3.0174,3.087],[1.3957,1.9163,2.3032,2.5665,2.7294,2.8621,2.9741,3.2071,3.3838],[1.3046,1.7983,2.218,2.5048,2.6881,2.8311,2.964,3.2268,3.5159],[1.1168,1.5926,2.0046,2.3388,2.5678,2.7281,2.8624,3.1313,3.4583],[0.9261,1.3464,1.7376,2.0548,2.3205,2.5003,2.6391,2.8532,3.068]],"beatAngle":[45.1,45.1,43.0,41.7,40.6,39.9,39.6,39.7,40.9],"beatVmgK":[0.8138,1.1386,1.3959,1.5771,1.6988,1.783,1.8218,1.8393,1.7982],"runAngle":[144.2,144.2,146.7,147.1,147.5,149.3,173.6,177.3,177.7],"runVmgK":[0.8028,1.1659,1.5044,1.7794,2.0082,2.1723,2.3418,2.6493,2.8671],"loaRange":[8.3,15.4]};
+const D2R=Math.PI/180;
+const $=id=>document.getElementById(id);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+function lin(xs,ys,x){if(x<=xs[0])return ys[0];const n=xs.length;if(x>=xs[n-1])return ys[n-1];for(let i=0;i<n-1;i++){if(x<=xs[i+1]){const f=(x-xs[i])/(xs[i+1]-xs[i]);return ys[i]+(ys[i+1]-ys[i])*f;}}return ys[n-1];}
+function ptsAt(j){
+  const ba=PM.beatAngle[j],pts=[[ba,PM.beatVmgK[j]/Math.cos(ba*D2R)]];
+  PM.twa.forEach((a,i)=>{if(a>ba+1)pts.push([a,PM.k[i][j]]);});
+  const ra=PM.runAngle[j]; if(ra>151) pts.push([ra,PM.runVmgK[j]/Math.cos((180-ra)*D2R)]);
+  if(ra<179) pts.push([180,PM.runVmgK[j]]);
+  return pts;
+}
+function kAt(twa,j){const p=ptsAt(j);if(twa<p[0][0]-0.01)return null;return lin(p.map(x=>x[0]),p.map(x=>x[1]),twa);}
+function gridPos(tws){const G=PM.tws,tt=clamp(tws,G[0],G[G.length-1]);let j=0;while(j<G.length-2&&tt>G[j+1])j++;return [j,(tt-G[j])/(G[j+1]-G[j])];}
+const beatAng=tws=>lin(PM.tws,PM.beatAngle,tws), runAng=tws=>lin(PM.tws,PM.runAngle,tws);
+const LF=()=>Math.pow(S.boat.loa,PM.exp);
+function boatSpeed(twa,tws){
+  if(tws<=0) return 0;
+  const [j,f]=gridPos(tws),ba=beatAng(tws); if(twa<ba-0.01) return null;
+  const k1=kAt(Math.max(twa,PM.beatAngle[j]),j),k2=kAt(Math.max(twa,PM.beatAngle[j+1]),j+1);
+  return (k1+(k2-k1)*f)*LF();
+}
+function trueFromApparent(awa,tws){
+  if(tws<=0||awa<5) return null;
+  const ba=beatAng(tws),vb=boatSpeed(ba,tws);
+  const app=twa=>{const V=twa<ba?vb:boatSpeed(twa,tws);const x=tws*Math.cos(twa*D2R)+V,y=tws*Math.sin(twa*D2R);return {awa:Math.atan2(y,x)/D2R,aws:Math.hypot(x,y),V};};
+  let lo=awa,hi=180; for(let i=0;i<40;i++){const m=(lo+hi)/2; if(app(m).awa<awa) lo=m; else hi=m;}
+  const twa=(lo+hi)/2,r=app(twa); return {twa,aws:r.aws,V:twa<ba?null:r.V,ba};
+}
+function TA(){if(S.tws<=0)return S.awa;const r=trueFromApparent(S.awa,S.tws);return r?r.twa:S.awa;}
+function apparentFromTrue(twa,tws){if(tws<=0)return twa;const V=boatSpeed(Math.max(twa,beatAng(tws)),tws)||0;return Math.atan2(tws*Math.sin(twa*D2R),tws*Math.cos(twa*D2R)+V)/D2R;}
+
+const MAYOR_T=[['carro','Carro de mayor'],['backstay','Tensor en el estay de popa'],['cunningham','Cunningham'],['pujamen','Pujamen ajustable'],['contra','Contra']];
+const GEN_T=[['enrollador','Enrollador'],['escotero','Escotero ajustable'],['tangon','Tangón']];
+const ZN={proa:'Proa al viento',cenida:'Ceñida',desc:'Descuartelar',traves:'Través',largo:'Largo',popa:'Empopada'};
+function zone(a){
+  let k;
+  if(a<beatAng(S.tws)-2) k='proa'; else if(a<55) k='cenida'; else if(a<80) k='desc'; else if(a<105) k='traves'; else if(a<155) k='largo'; else k='popa';
+  const D={
+    proa:t('Más cerrado que la ceñida óptima (unos {a}° reales). Las velas flamean y el barco se para: cae.',{a:Math.round(beatAng(S.tws))}),
+    cenida:t('Lo más cerca del viento que se navega. Velas cazadas y planas; timón fino con los catavientos.'),
+    desc:t('Entre la ceñida y el través. Larga un poco las velas: el barco acelera.'),
+    traves:t('Viento por el costado. Velas a medio largar y con bolsa. Suele ser el rumbo más rápido.'),
+    largo:t('Viento por la aleta. Velas muy largadas; se escora poco y se nota menos viento del que hay.'),
+    popa:t('Viento por popa. Mayor abierta hasta casi los obenques; vigila la trasluchada.')};
+  return {k,n:t(ZN[k]),d:D[k]};
+}
+const mode=a=>a<70?'up':(a<140?'reach':'run');
+function band(x){ if(x<8) return {k:'light'}; if(x<14) return {k:'med'}; if(x<20) return {k:'fresh'}; return {k:'strong'}; }
+const REEF={up:[16,22,28],reach:[18,24,30],run:[20,26,32]};
+
+/* ---------- Config UI ---------- */
+function buildToggles(el,list){
+  el.innerHTML='';
+  list.forEach(([k,n])=>{const b=document.createElement('button');b.type='button';b.className='tg';b.id='tg-'+k;b.textContent=t(n);b.setAttribute('aria-pressed',S.cfg[k]?'true':'false');
+    b.onclick=()=>{S.cfg[k]=!S.cfg[k];b.setAttribute('aria-pressed',S.cfg[k]?'true':'false');saveCfg();render();};el.appendChild(b);});
+}
+function bindSeg(id,get,set){
+  const el=$(id); const sync=()=>el.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.v)===String(get())?'true':'false'));
+  el.querySelectorAll('button').forEach(b=>b.onclick=()=>{set(b.dataset.v);sync();render();}); sync(); return sync;
+}
+buildToggles($('tg-mayor'),MAYOR_T); buildToggles($('tg-genova'),GEN_T);
+const syncRig=bindSeg('rig',()=>S.cfg.rig,v=>{S.cfg.rig=v;saveCfg();});
+const syncRizos=bindSeg('rizos',()=>S.cfg.rizos,v=>{S.cfg.rizos=+v;saveCfg();});
+
+/* ---------- Dial ---------- */
+const NS='http://www.w3.org/2000/svg', CX=150, CY=150, R=118;
+const mk=(tg,a,p)=>{const e=document.createElementNS(NS,tg);for(const k in a)e.setAttribute(k,a[k]);if(p)p.appendChild(e);return e;};
+const pt=(th,r)=>[CX+r*Math.sin(th*Math.PI/180), CY-r*Math.cos(th*Math.PI/180)];
+function arc(r,a0,a1){const[x0,y0]=pt(a0,r),[x1,y1]=pt(a1,r);return `M${x0},${y0} A${r},${r} 0 ${Math.abs(a1-a0)>180?1:0} 1 ${x1},${y1}`;}
+(function(){
+  const g=$('d-static');
+  mk('circle',{cx:CX,cy:CY,r:134,class:'d-face'},g);
+  mk('path',{d:arc(132,4,176),class:'d-stbd'},g);
+  mk('path',{d:arc(132,184,356),class:'d-port'},g);
+  mk('circle',{cx:CX,cy:CY,r:96,class:'d-ring','stroke-dasharray':'2 4'},g);
+  for(let d=0;d<360;d+=10){const maj=d%30===0;const[a,b]=pt(d,130),[c,e]=pt(d,maj?120:125);mk('line',{x1:a,y1:b,x2:c,y2:e,class:'d-tick'+(maj?' maj':'')},g);
+    if(maj){const[lx,ly]=pt(d,108);const tx=mk('text',{x:lx,y:ly,class:'d-lbl'},g);tx.textContent=d<=180?d:360-d;}}
+  mk('path',{d:'M150,74 C172,98 178,140 175,190 L171,216 L129,216 L125,190 C122,140 128,98 150,74 Z',class:'d-hull'},g);
+  mk('rect',{x:136,y:186,width:28,height:24,rx:3,class:'d-cock'},g);
+})();
+function sailPath(x0,y0,x1,y1,L,bulge){
+  const dx=x1-x0,dy=y1-y0,len=Math.hypot(dx,dy)||1; let nx=-dy/len,ny=dx/len; if(nx*L<0){nx=-nx;ny=-ny;}
+  const mx=(x0+x1)/2+nx*bulge,my=(y0+y1)/2+ny*bulge; return `M${x0},${y0} Q${mx},${my} ${x1},${y1} Z`;
+}
+function drawDial(){
+  const a=S.awa,L=S.side==='estribor'?-1:1,z=zone(TA()).k;
+  const sg=$('d-sails'); sg.innerHTML='';
+  const ng=apparentFromTrue(beatAng(S.tws),S.tws);
+  mk('path',{d:`M${CX},${CY} L${pt(-ng,126).join(',')} A126,126 0 0 1 ${pt(ng,126).join(',')} Z`,class:'d-nogo'},sg);
+  const mx=150,my=128;
+  const luff=z==='proa';
+  const b=luff?2:clamp((a-24)*0.55,4,80), br=b*Math.PI/180;
+  const bx=mx+L*72*Math.sin(br),by=my+72*Math.cos(br);
+  mk('path',{d:sailPath(mx,my,bx,by,L,luff?3:11),class:'d-main'+(luff?' d-luff':'')},sg);
+  mk('line',{x1:mx,y1:my,x2:bx,y2:by,class:'d-boom'},sg);
+  const tx=150,ty=84; let gL=L,g=clamp((a-22)*0.45+8,6,60),gl=62,gb=12,gcls='d-gen';
+  if(z==='popa'){ if(S.cfg.tangon){gL=-L;g=78;} else {g=60;gb=3;gcls+=' d-luff';} }
+  if(luff){g=2;gb=3;gcls+=' d-luff';}
+  const gr=g*Math.PI/180,gx=tx+gL*gl*Math.sin(gr),gy=ty+gl*Math.cos(gr);
+  mk('path',{d:sailPath(tx,ty,gx,gy,gL,gb),class:gcls},sg);
+  mk('circle',{cx:mx,cy:my,r:3.5,class:'d-mast'},sg);
+  const wg=$('d-windg'); wg.innerHTML='';
+  const th=S.side==='estribor'?a:-a; const[wx,wy]=pt(th,R),[ax,ay]=pt(th,R-38),[hx,hy]=pt(th,R-46);
+  mk('line',{x1:wx,y1:wy,x2:ax,y2:ay,class:'d-arrow'},wg);
+  const ang=Math.atan2(hy-wy,hx-wx),s=8;
+  mk('path',{d:`M${hx},${hy} L${hx-s*Math.cos(ang-0.5)},${hy-s*Math.sin(ang-0.5)} L${hx-s*Math.cos(ang+0.5)},${hy-s*Math.sin(ang+0.5)} Z`,class:'d-arrowhead'},wg);
+  mk('circle',{cx:wx,cy:wy,r:13,class:'d-wind'},wg); mk('circle',{cx:wx,cy:wy,r:4.5,class:'d-wind-in'},wg);
+}
+const dial=$('dial'); let drag=false;
+function setFromPointer(ev){
+  const r=dial.getBoundingClientRect(); const x=(ev.clientX-r.left)/r.width*300-CX, y=(ev.clientY-r.top)/r.height*300-CY;
+  if(Math.hypot(x,y)<20) return;
+  const th=Math.atan2(x,-y)*180/Math.PI; S.side=th>=0?'estribor':'babor'; S.awa=Math.round(Math.abs(th)); render();
+}
+dial.addEventListener('pointerdown',e=>{drag=true;dial.setPointerCapture(e.pointerId);setFromPointer(e);});
+dial.addEventListener('pointermove',e=>{if(drag)setFromPointer(e);});
+dial.addEventListener('pointerup',()=>drag=false); dial.addEventListener('pointercancel',()=>drag=false);
+$('awa').addEventListener('input',e=>{S.awa=+e.target.value;render();});
+$('tws').addEventListener('input',e=>{S.tws=+e.target.value;render();});
+
+/* ---------- Trim recommendations ---------- */
+function trim(){
+  const c=S.cfg,z=zone(TA()).k,bd=band(S.tws).k,hard=bd==='fresh'||bd==='strong',open=['traves','largo','popa'].includes(z),up=z==='cenida';
+  const M=[],G=[];
+  if(z==='proa'){M.push({c:t('Rumbo'),p:'',v:t('Estás en la zona muerta. Cae hasta 40–45° antes de trimar nada.')});return {M,G};}
+  const esc={cenida:bd==='light'?'Cazada sin pasarte: deja que la parte alta abra un poco.':hard?'Cazada. En rachas, baja el carro o larga un palmo para no escorar de más.':'Cazada: botavara cerca del eje y el catavientos de baluma alto volando casi siempre.',
+    desc:'Un poco largada respecto a la ceñida.',traves:'A medio largar: larga hasta que flamee el grátil y caza un poco.',largo:'Muy largada: larga hasta que flamee el grátil y caza un poco.',popa:'Largada casi hasta los obenques, sin que la vela apoye en ellos.'}[z];
+  M.push({c:t('Escota'),p:t('§Baluma'),v:t(esc)});
+  if(c.carro){M.push({c:t('Carro'),p:t('§Baluma'),v:t(up?(bd==='light'?'A barlovento: centra la botavara con la escota algo suelta.':hard?'A sotavento: bájalo en cada racha antes de tocar la escota.':'Botavara en el eje.'):'A sotavento del todo.')});}
+  else if(up&&hard){M.push({c:t('Carro'),p:t('§Baluma'),v:'',alt:t('Sin carro: para descargar, larga escota y controla la baluma con la contra.')});}
+  if(c.contra){M.push({c:t('Contra'),p:t('§Baluma'),v:t(up?(bd==='light'?'Suelta.':hard?(c.carro?'Tensa.':'Tensa: sin carro es la que sujeta la baluma cuando largas escota.'):'Sin holgura, sin tirar.'):z==='popa'?'Tensa moderada: evita que la botavara suba y que el barco balancee.':'Ajustada para que la parte alta no se abra de más. En rachas fuertes, lárgala para soltar presión.')});}
+  else M.push({c:t('Contra'),p:t('§Baluma'),v:'',alt:t('Sin contra, la botavara sube al largar escota y la vela se abre arriba. A rumbos abiertos tendrás más escora y balanceo.')});
+  if(c.pujamen) M.push({c:t('Pujamen'),p:t('§Pujamen'),v:t(hard?'Cazado a tope: aplana el tercio bajo.':open?'Suelto: más bolsa, más potencia.':bd==='light'?'Algo suelto: bolsa abajo.':'Medio: sin arrugas en el pujamen.')});
+  M.push({c:c.cunningham?t('Cunningham'):t('Driza'),p:t('§Grátil'),v:t(hard?'Tenso: lleva la bolsa hacia delante y abre la baluma alta.':'Suelto: unas arrugas leves en el grátil no importan.')});
+  if(c.backstay) M.push({c:t('Estay de popa'),p:t('§Bolsa'),v:t(open?(hard?'Tensor algo cazado: sujeta el aparejo.':'Tensor suelto: más bolsa.'):hard?(c.rig==='fraccionado'?'Tensor cazado: curva el mástil, aplana la mayor y abre la baluma alta. De paso tensa el estay de proa y el génova se aplana.':'Tensor cazado: en aparejo a tope casi no toca la mayor; lo que hace es tensar el estay de proa para que no se combe y el génova vaya más plano.'):bd==='light'?'Tensor suelto.':'Tensor un poco cazado: lo justo para que el estay de proa no se combe.')});
+  if(z==='popa'){G.push({c:t('Escota'),p:t('§Baluma'),v:t(c.tangon?'Pásalo a orejas con el tangón: a barlovento, opuesto a la mayor.':'Tapado por la mayor. Sin tangón, las orejas son inestables: enróllalo o abre a un largo.')});}
+  else G.push({c:t('Escota'),p:t('§Baluma'),v:t(up?'Cazada hasta que la baluma quede a unos centímetros de la cruceta y los catavientos vuelen horizontales.':'Larga hasta que el catavientos de barlovento se levante y caza un poco.')});
+  if(c.escotero){G.push({c:t('Escotero'),p:t('§Baluma'),v:t(open||z==='desc'?'Adelante y, si tienes barber o carril exterior, hacia fuera.':bd==='light'?'Adelante: más bolsa abajo.':hard?'Atrás: abre la baluma alta y descarga arriba.':'Neutro: al orzar, los catavientos alto y bajo flamean a la vez.')});}
+  else G.push({c:t('Escotero'),p:t('§Baluma'),v:'',alt:t('Fijo: si la parte alta flamea antes que la baja, no lo puedes corregir; compensa con la escota.')});
+  G.push({c:t('Driza'),p:t('§Grátil'),v:t(hard?'Tensa: sin arrugas, la bolsa adelante.':'Algo suelta: arrugas leves en el grátil.')});
+  if(c.enrollador&&hard) G.push({c:t('Enrollador'),p:t('§Superficie'),v:t('Reduce por fases. Al enrollar, adelanta el escotero porque el puño sube y avanza.')});
+  return {M,G};
+}
+function reefAdvice(){
+  const m=mode(TA()),Rr=REEF[m],x=S.tws,n=S.cfg.rizos;
+  const need=x>=Rr[2]?3:x>=Rr[1]?2:x>=Rr[0]?1:0;
+  if(n===0) return need?{h:t('Sin rizos'),d:t('Con {x} kn te tocaría reducir. Tu barco no tiene rizos: reduce génova o arría la mayor.',{x})}:{h:t('Sin rizos'),d:t('De momento no hace falta reducir.')};
+  if(!need) return {h:t('Vela entera'),d:t('{o} rizo hacia {k} kn en este rumbo (orientativo). Antes, aplana con los ajustes.',{o:ord(1),k:Rr[0]})};
+  const k=Math.min(need,n);
+  let d=t('A {x} kn en {z} lo orientativo es llevar {o} rizo.',{x,z:zone(TA()).n.toLowerCase(),o:ord(k)});
+  if(need>n) d+=' '+t('Ya no te quedan rizos: reduce génova.');
+  if(m==='run') d+=' '+t('En popa, riza antes de abrir rumbo: para rizar hay que orzar.');
+  return {h:t('{o} rizo',{o:ord(k)}),d};
+}
+
+/* ---------- Problems & checklists ---------- */
+const PROBLEMS=[
+  ['orzada','Se me va de orzada'],['sobre','Escoro mucho / sufro'],['potencia','No anda, le falta potencia'],['blando','Cae solo (barco blando)'],
+  ['ola','Golpea la ola y se para'],['tt_barlo','Flamea catavientos de barlovento'],['tt_sota','Flamea catavientos de sotavento'],['baluma','Flamea o vibra la baluma']];
+const pName=k=>t(PROBLEMS.find(x=>x[0]===k)[1]);
+const OVER=['orzada','sobre'];
+const has=k=>c=>!!c[k];
+function reefSeq(m,p){
+  const c=S.cfg,Rr=REEF[m],mainFirst=p==='orzada'||c.rig==='fraccionado'||!c.enrollador;
+  const runNote=m==='run'?' '+t('Para rizar tienes que orzar hasta casi ceñida y el viento aparente sube de golpe: hazlo antes de que suba más.'):'';
+  const r1={t:t('Toma el {o} rizo de la mayor',{o:ord(1)}),d:t(p==='orzada'?'Se va de orzada porque la mayor empuja la popa hacia sotavento. Reducirla primero devuelve el equilibrio al timón.':c.rig==='fraccionado'?'En aparejo fraccionado la mayor es la vela principal: se riza primero.':'Reduce mayor para bajar escora y timón.')+runNote,need:cc=>cc.rizos>=1,req:'rizos',reef:1};
+  const g1={t:t('Enrolla parte del génova'),d:(!mainFirst?t('En aparejo a tope el génova es el motor grande: reducirlo primero baja la escora sin dejar el barco ardiente.')+' ':'')+t('Más o menos un tercio (aprox.). Adelanta el escotero al enrollar.'),need:has('enrollador'),req:'enrollador',reef:1};
+  const seq=mainFirst?[[r1,Rr[0]],[g1,Rr[0]+3]]:[[g1,Rr[0]],[r1,Rr[0]+3]];
+  seq.push([{t:t('Toma el {o} rizo',{o:ord(2)}),d:t('Si con el primero sigues escorando de más o con mucho timón.'),need:cc=>cc.rizos>=2,req:'2º rizo',reef:1},Rr[1]]);
+  seq.push([{t:t('Enrolla más el génova'),d:t('Hasta la mitad o menos (aprox.); un génova muy enrollado pierde forma, por eso va al final.'),need:has('enrollador'),req:'enrollador',reef:1},Rr[1]+3]);
+  seq.push([{t:t('Toma el {o} rizo',{o:ord(3)}),d:t('Último escalón de mayor.'),need:cc=>cc.rizos>=3,req:'3er rizo',reef:1},Rr[2]]);
+  seq.push([{t:t('Si aún sufres: cambia el plan'),d:t('Abre rumbo, ponte al pairo o vuelve a puerto. Chalecos y líneas de vida puestos.'),need:()=>true,kind:'Seguridad',reef:1},Rr[2]+4]);
+  return seq.map(([s,wf])=>Object.assign({wf,kind:'Reducir'},s));
+}
+function steps(p){
+  const m=mode(TA()),c=S.cfg,fr=c.rig==='fraccionado';
+  const T=(ti,d,need,req,kind)=>({t:t(ti),d:t(d),need:need||(()=>true),req,kind:kind||'Ajuste'});
+  if(OVER.includes(p)){
+    let a=[];
+    if(m==='up') a=[
+      T('Ve fino en las rachas','Orza un pelo cuando entra la racha, hasta que flamee el grátil del génova, y vuelve a caer al pasar. Si llevas mucho timón metido todo el rato, el barco te pide reducir.',null,null,'Timón'),
+      T('Caza el tensor del estay de popa',fr?'Curva el mástil, aplana la mayor y abre la baluma alta. El estay de proa se tensa como consecuencia y el génova se aplana.':'En aparejo a tope casi no toca la mayor: sirve para que el estay de proa no se combe y el génova vaya más plano.',has('backstay'),'tensor en el estay de popa'),
+      T(c.cunningham?'Tensa el cunningham':'Tensa la driza de mayor','Grátil tenso: la bolsa va hacia delante y la baluma alta se abre y suelta presión.'),
+      T('Caza el pujamen a tope','Aplana el tercio bajo de la mayor.',has('pujamen'),'pujamen ajustable'),
+      c.carro?T('Baja el carro a sotavento','En cada racha, antes de tocar la escota: la botavara se abre sin que se abra la baluma.'):T('Larga escota en las rachas con la contra tensa','Sin carro, la escota es tu válvula. La contra evita que la botavara suba y la vela se embolse.',cc=>cc.contra,'contra'),
+      T('Retrasa el escotero del génova','Abre la baluma alta del génova y descarga arriba.',has('escotero'),'escotero ajustable'),
+      T('Deja flamear el grátil de la mayor en rachas','Que la parte delantera de la mayor se acueste por el génova es aceptable: sueltas potencia sin perder rumbo.')];
+    else if(m==='reach') a=[
+      T('Larga la contra en las rachas','Abre la baluma alta y suelta la presión que tumba el barco. Es lo más rápido para evitar una orzada a rumbos abiertos.',has('contra'),'contra'),
+      T('Larga escota de mayor en la racha','Aunque flamee. Vuelve a cazar al pasar.'),
+      T('Carro a sotavento del todo','Abre la botavara al máximo.',has('carro'),'carro de mayor'),
+      T('Cae en las rachas','A rumbos abiertos, aleja la proa del viento cuando entra la racha y vuelve al rumbo al pasar. Anticípate: con el timón a tope ya es tarde.',null,null,'Timón'),
+      T('Aplana la mayor',c.backstay?'Grátil y pujamen tensos, y el tensor del estay de popa cazado.':'Grátil y pujamen tensos.'),
+      T('Escotero del génova algo atrás','Abre la parte alta del génova.',has('escotero'),'escotero ajustable')];
+    else a=[
+      T('Pon una retenida en la botavara','Evita una trasluchada involuntaria. Con viento fuerte en popa es lo primero.',null,null,'Seguridad'),
+      T('Contra tensa (moderada)','Que la botavara no suba: si la parte alta se abre, el barco balancea.',has('contra'),'contra'),
+      T('No largues la mayor contra los obenques','Déjala un poco antes; apoyada se roza y empuja hacia la orzada.'),
+      T('Timonea con la ola','Corrige pronto y poco y deja que la popa siga a la ola. Si vas por la aleta, no te pongas justo en popa: riesgo de trasluchar.',null,null,'Timón'),
+      T(c.tangon?'Génova a orejas con tangón':'Enrolla el génova','En popa el génova tapado no aporta y da tirones.')];
+    return a.concat(reefSeq(m,p));
+  }
+  if(p==='potencia') return [
+    T('Suelta el tensor del estay de popa','Más bolsa en las velas.',has('backstay'),'tensor en el estay de popa'),
+    T(c.cunningham?'Suelta el cunningham':'Afloja un poco la driza','Arrugas leves en el grátil están bien con poco viento.'),
+    T('Suelta algo el pujamen','Bolsa en la parte baja = potencia.',has('pujamen'),'pujamen ajustable'),
+    m==='up'?T('Carro a barlovento, escota algo suelta','Botavara en el eje y la baluma alta un poco abierta: el flujo no se despega.',has('carro'),'carro de mayor'):T('Larga hasta que flamee y caza un poco','A rumbos abiertos se suele ir demasiado cazado.'),
+    T('Adelanta el escotero del génova','Más bolsa abajo en el génova.',has('escotero'),'escotero ajustable'),
+    T('Abre 5° el rumbo','No vayas tan fino: primero velocidad, luego altura.',null,null,'Timón'),
+    T('Quita rizos y desenrolla','Si llevas vela reducida de antes, ya no hace falta.')];
+  if(p==='blando') return [
+    T('Más mayor',c.carro?'Caza escota y sube el carro a barlovento: la mayor empuja la proa hacia el viento.':'Caza escota: la mayor empuja la proa hacia el viento.'),
+    T('Menos génova si va entero y la mayor rizada','Equilibra: un génova grande con la mayor reducida hace que el barco caiga.',has('enrollador'),'enrollador'),
+    T('Escora ligera con poco viento','Tripulación a sotavento: con algo de escora el barco coge un poco de timón y lo nota mejor.',null,null,'Peso')];
+  if(p==='ola') return [
+    T('Abre 5° el rumbo','Con ola no se puede ir tan fino: busca velocidad.',null,null,'Timón'),
+    T('Más bolsa',c.backstay?'Pujamen algo suelto y tensor del estay de popa largado: la vela empuja más en la ola.':'Pujamen algo suelto: la vela empuja más en la ola.'),
+    T('Adelanta el escotero','Génova con más bolsa abajo.',has('escotero'),'escotero ajustable'),
+    T('Abre la baluma (twist)','Escota de mayor un poco suelta: aguanta mejor los cambios de velocidad.'),
+    T('Orza en la subida, cae en la bajada','Sube un poco al encarar la ola y cae para coger velocidad al bajarla.',null,null,'Timón')];
+  if(p==='tt_barlo') return [
+    T('Cae un poco o caza la escota','Flamea el de barlovento: vas demasiado orzado o la vela está demasiado largada.',null,null,'Timón'),
+    T('Si el alto rompe antes que el bajo: escotero adelante','El punto de escota está demasiado atrás y la parte alta abre de más.',has('escotero'),'escotero ajustable'),
+    T('Si el bajo rompe antes que el alto: escotero atrás','El punto de escota está demasiado adelante.',has('escotero'),'escotero ajustable')];
+  if(p==='tt_sota') return [
+    T('Orza un poco o larga la escota','Flamea el de sotavento: vas demasiado caído o la vela está demasiado cazada y el flujo se despega.',null,null,'Timón'),
+    T('Objetivo: los dos horizontales','Ese es el trimado bueno. En ceñida, el de barlovento puede levantarse a ratos.')];
+  if(p==='baluma') return [
+    T('Tensa el cabo de baluma','Lo justo para que pare de vibrar. Si te pasas, la baluma hace gancho hacia barlovento y frena.'),
+    T('Revisa la escota',c.contra?'Una baluma que flamea en la mayor puede ser escota demasiado suelta o contra floja.':'Una baluma que flamea en la mayor puede ser escota demasiado suelta.'),
+    T('Si no para','Vela vieja o estirada: es desgaste, no trimado.',null,null,'Revisión')];
+  return [];
+}
+function statusOf(s,i,list,p){
+  if(!OVER.includes(p)||!s.reef) return {c:'',t:''};
+  if(S.tws>=s.wf) return {c:'now',t:t('Ya toca')};
+  return {c:'later',t:'~'+s.wf+' kn'};
+}
+const WHY={orzada:'El barco se va de orzada: tiene demasiada potencia arriba y atrás. Primero aplana y descarga, luego reduce.',sobre:'Exceso de potencia. El orden va de lo que no cuesta velocidad a lo que sí: aplanar, descargar y, al final, reducir.',potencia:'Falta potencia: dale bolsa a las velas y abre un poco el rumbo.',blando:'El barco cae solo: el centro vélico está demasiado a proa.',ola:'Con ola el barco necesita potencia para atravesarla, no velas planas.',tt_barlo:'Catavientos de barlovento flameando.',tt_sota:'Catavientos de sotavento flameando.',baluma:'Baluma que vibra o flamea.'};
+
+function renderChecklist(){
+  const p=S.problem, ol=$('checklist'); ol.innerHTML='';
+  if(!p){$('cl-title').textContent=t('Checklist');$('cl-why').textContent=t('Describe lo que te pasa o elige una opción.');$('cl-prog').textContent='';$('omitted').textContent='';return;}
+  const all=steps(p), list=all.filter(s=>s.need(S.cfg)), om=all.filter(s=>!s.need(S.cfg));
+  $('cl-title').textContent=pName(p);
+  $('cl-why').textContent=t(WHY[p])+(OVER.includes(p)?' '+t('Umbrales para {z} a {x} kn (orientativos).',{z:zone(TA()).n.toLowerCase(),x:S.tws}):'');
+  const firstReef=OVER.includes(p)?list.findIndex(x=>x.reef):-1;
+  list.forEach((s,i)=>{
+    if(i===firstReef&&i>0){const sep=document.createElement('li');sep.className='cl-sep';sep.textContent=t('Si no basta, reduce vela');ol.appendChild(sep);}
+    const id=p+'-'+i, st=statusOf(s,i,list,p), li=document.createElement('li');
+    if(s.reef) li.classList.add('reef'); if(S.done[id]) li.classList.add('done');
+    li.innerHTML=`<input type="checkbox" id="ck-${id}" ${S.done[id]?'checked':''} aria-label="${t('Hecho')}"><div><div class="st-t"><label for="ck-${id}"><span class="kind">${t(s.kind)}</span>${s.t}</label></div><div class="st-d">${s.d}</div></div>${st.t?`<span class="stat ${st.c}">${st.t}</span>`:'<span></span>'}`;
+    li.querySelector('input').onchange=e=>{S.done[id]=e.target.checked;li.classList.toggle('done',e.target.checked);prog(list,p);};
+    ol.appendChild(li);
+  });
+  prog(list,p);
+  const reqs=[...new Set(om.map(s=>s.req).filter(Boolean))].map(x=>t(x));
+  $('omitted').textContent=om.length?t(om.length>1?'{n} pasos omitidos porque tu barco no tiene: {r}.':'{n} paso omitido porque tu barco no tiene: {r}.',{n:om.length,r:reqs.join(', ')}):'';
+  $('proc').hidden=!OVER.includes(p)||S.cfg.rizos===0;
+}
+function prog(list,p){const n=list.filter((s,i)=>S.done[p+'-'+i]).length;$('cl-prog').textContent=t('{n}/{m} hechos',{n,m:list.length});}
+
+/* ---------- Parser (ES / EN / FR) ---------- */
+function norm(s){return s.toLowerCase().replace(/œ/g,'oe').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[’']/g,"'");}
+function parse(txt){
+  const x=norm(txt), out={};
+  const kn=x.match(/(\d{1,2}(?:[.,]\d)?)\s*(nudos?|kn|kts?|knots?|nds?|noeuds?)\b/); if(kn) out.tws=Math.round(parseFloat(kn[1].replace(',','.')));
+  const deg=x.match(/(\d{2,3})\s*(°|º|grados|degrees|degres|deg)/);
+  if(deg) out.awa=clamp(+deg[1],0,180);
+  else if(/cen(i|y)d|cinend|bolina|contra el viento|close.?hauled|beating|upwind|on the wind|au pres|pres serre|remont/.test(x)) out.twa='beat';
+  else if(/descuartel|close reach|bon plein/.test(x)) out.twa=65;
+  else if(/traves|beam reach|abeam|travers/.test(x)) out.twa=90;
+  else if(/\b(un |al )?largo\b|aleta|broad reach|largue/.test(x)) out.twa=130;
+  else if(/popa|empopad|dead run|downwind|\brun(ning)?\b|vent arriere|portant/.test(x)) out.twa=170;
+  if(/\bbabor\b|\bport tack\b|\bbabord\b/.test(x)) out.side='babor'; else if(/\bestribor\b|\bstarboard\b|\btribord\b/.test(x)) out.side='estribor';
+  if(/orzad|ardient|se me (va|sube) (a|hacia) barlovento|se me cruza|round(s|ing)? up|broach|weather helm|lof|\bardent/.test(x)) out.problem='orzada';
+  else if(/cae solo|blando|se me va (a|hacia) sotavento|lee helm|falls? off|\bmou\b|abat seul|abat tout seul/.test(x)) out.problem='blando';
+  else if(/catavientos.*barlovento|barlovento.*flame|windward tell|windward.*(flutter|lift)|penons? au vent|au vent.*(fasey|leve)/.test(x)) out.problem='tt_barlo';
+  else if(/catavientos.*sotavento|sotavento.*flame|leeward tell|leeward.*(flutter|stall)|penons? sous le vent|sous le vent.*(fasey|decroch)/.test(x)) out.problem='tt_sota';
+  else if(/baluma.*(flame|vibr|tiembl)|(vibr|tiembl).*baluma|leech.*(flutter|vibrat|flap)|chute.*(fasey|vibr|bat)/.test(x)) out.problem='baluma';
+  else if(/golpe|pantoque|\bola\b|cabece|pound|slam|waves|chop|tape|vagues?|clapot/.test(x)) out.problem='ola';
+  else if(/no anda|lento|parad|sin potencia|falta.*potencia|no avanza|poco viento|no corre|\bslow|no power|underpowered|not moving|doesn'?t (go|move)|light wind|lacks? power|\blent|n'?avance pas|manque de puissance|petit temps|sous.?toile/.test(x)) out.problem='potencia';
+  else if(/sufr|escor|tumb|pasad|sobrepot|demasiad|mucho viento|agua en la banda|asust|balance|overpowered|heel|struggl|suffer|scared|rail|rolling|too much|gite|surtoil|souffr|peur|roulis|trop de/.test(x)) out.problem='sobre';
+  return out;
+}
+function applyParse(txt){
+  const r=parse(txt), u=$('understood');
+  if(!r.problem&&r.tws==null&&r.awa==null&&r.twa==null){u.className='understood err';u.innerHTML=t('No he reconocido nada. Prueba con el viento en nudos, el rumbo (ceñida, través, largo, popa) y qué notas, o elige una opción abajo.');return;}
+  if(r.tws!=null){S.tws=clamp(r.tws,0,40);}
+  if(r.awa!=null){S.awa=r.awa;} else if(r.twa!=null){const tv=r.twa==='beat'?beatAng(S.tws)+2:r.twa;S.awa=Math.round(apparentFromTrue(tv,S.tws));}
+  if(r.side){S.side=r.side;}
+  if(r.problem&&r.problem!==S.problem){S.problem=r.problem;S.done={};}
+  S.parsed={tws:r.tws!=null,rumbo:r.awa!=null||r.twa!=null,problem:r.problem||null,src:'text'};
+  render();
+}
+function renderUnderstood(){
+  const u=$('understood'), P=S.parsed; if(!P){u.innerHTML='';return;}
+  const z=zone(TA()).n;
+  if(P.src==='chip'){u.className='understood';u.innerHTML=`<b>${t('Problema:')}</b> ${pName(S.problem).toLowerCase()} · <b>${t('Rumbo:')}</b> ${z.toLowerCase()} (${t('{a}° aparente',{a:S.awa})}) · <b>${t('Viento:')}</b> ${S.tws} kn`;return;}
+  const parts=[];
+  parts.push(`<b>${t('Viento:')}</b> ${P.tws?S.tws+' kn':t('el del control ({x} kn)',{x:S.tws})}`);
+  parts.push(`<b>${t('Rumbo:')}</b> ${P.rumbo?z+' ('+t('{a}° aparente',{a:S.awa})+')':t('el del dial ({z}, {a}° aparente)',{z:z.toLowerCase(),a:S.awa})}`);
+  parts.push(`<b>${t('Problema:')}</b> ${P.problem?pName(P.problem).toLowerCase():t('no reconocido; elige uno abajo')}`);
+  u.className='understood'+(P.problem?'':' err'); u.innerHTML=t('Entendido:')+' '+parts.join(', ');
+}
+$('ask').addEventListener('submit',e=>{e.preventDefault();applyParse($('q').value);});
+document.querySelectorAll('.ex').forEach(b=>b.onclick=()=>{$('q').value=b.textContent.trim();applyParse(b.textContent);});
+function buildChips(){const el=$('chips');el.innerHTML='';PROBLEMS.forEach(([k,n])=>{const b=document.createElement('button');b.type='button';b.className='chip';b.dataset.k=k;b.textContent=t(n);b.onclick=()=>{if(S.problem!==k){S.problem=k;S.done={};}S.parsed={src:'chip'};render();};el.appendChild(b);});}
+buildChips();
+
+/* ---------- Ficha ---------- */
+const fmt=(v,d=1)=>v==null||isNaN(v)?'–':(S.lang==='en'?v.toFixed(d):v.toFixed(d).replace('.',','));
+const FT=0.3048;
+S.unit='m'; try{const u=localStorage.getItem('trim-unit'); if(u==='ft'||u==='m') S.unit=u;}catch(e){}
+const toU=m=>S.unit==='ft'?m/FT:m, fromU=v=>S.unit==='ft'?v*FT:v;
+const fmtLen=m=>S.unit==='ft'?fmt(m/FT,1)+' ft':fmt(m,2).replace(/[.,]?0+$/,'')+' m';
+const num=v=>parseFloat(String(v).replace(',','.'));
+function fillFicha(){
+  $('b-name').value=S.boat.name||''; $('b-loa').value=+toU(S.boat.loa).toFixed(S.unit==='ft'?1:2); $('b-beam').value=+toU(S.boat.beam).toFixed(S.unit==='ft'?1:2);
+  document.querySelectorAll('.u-lbl').forEach(e=>e.textContent=S.unit==='ft'?t('pies'):'m');
+}
+bindSeg('unit',()=>S.unit,v=>{S.unit=v;try{localStorage.setItem('trim-unit',v)}catch(e){}fillFicha();});
+fillFicha();
+$('b-name').addEventListener('input',e=>{S.boat.name=e.target.value;saveBoat();render();});
+$('b-loa').addEventListener('input',e=>{const m=fromU(num(e.target.value));if(m>=4&&m<=30){S.boat.loa=+m.toFixed(3);saveBoat();render();}});
+$('b-beam').addEventListener('input',e=>{const m=fromU(num(e.target.value));if(m>=1&&m<=10){S.boat.beam=+m.toFixed(3);saveBoat();render();}});
+
+/* ---------- Mis barcos (guardados) ---------- */
+S.boats=[]; S.activeId=null; S.store='local'; S.loaded=false; S.confirmDel=null; S.saveMsg=null;
+try{S.activeId=localStorage.getItem('trim-active')||null;}catch(e){}
+let boatsCol=null, boatsUnsub=null, firstLoad=true;
+const rec=()=>({name:(S.boat.name||'').trim(),loa:S.boat.loa,beam:S.boat.beam,cfg:Object.assign({},S.cfg)});
+const same=(a,b)=>JSON.stringify([a.name||'',+a.loa,+a.beam,a.cfg])===JSON.stringify([b.name||'',+b.loa,+b.beam,b.cfg]);
+const activeBoat=()=>S.boats.find(b=>b.id===S.activeId)||null;
+function setActive(id){S.activeId=id;try{id?localStorage.setItem('trim-active',id):localStorage.removeItem('trim-active')}catch(e){}}
+function loadBoat(b){
+  S.boat={name:b.name||'',loa:+b.loa,beam:+b.beam}; Object.assign(S.cfg,{rig:'tope',carro:true,backstay:false,cunningham:true,pujamen:true,contra:true,escotero:true,enrollador:true,tangon:false,rizos:2},b.cfg||{});
+  saveBoat(); saveCfg(); fillFicha(); buildToggles($('tg-mayor'),MAYOR_T); buildToggles($('tg-genova'),GEN_T); syncRig(); syncRizos(); S.done={};
+}
+function localBoats(){try{return JSON.parse(localStorage.getItem('trim-boats')||'[]')}catch(e){return []}}
+function writeLocal(){try{localStorage.setItem('trim-boats',JSON.stringify(S.boats));return true}catch(e){return false}}
+function boatsArrived(list){
+  S.boats=list.sort((a,b)=>(a.name||'').localeCompare(b.name||'')); S.loaded=true;
+  if(firstLoad){firstLoad=false;const a=activeBoat(); if(a&&!same(a,rec())) loadBoat(a); else if(!a) setActive(null);}
+  else if(S.activeId&&!activeBoat()) setActive(null);
+  render();
+}
+async function saveCurrent(asNew){
+  const r=rec(); if(!r.name){S.saveMsg='Ponle nombre al barco para guardarlo';renderBoats();$('b-name').focus();return;}
+  r.updated=Date.now(); S.saveMsg=null;
+  try{
+    if(S.store==='db'){
+      if(!asNew&&S.activeId){await boatsCol.doc(S.activeId).set(r);}
+      else{const ref=boatsCol.doc(); await ref.set(r); setActive(ref.id);}
+    } else {
+      if(!asNew&&S.activeId){S.boats=S.boats.map(b=>b.id===S.activeId?Object.assign({id:b.id},r):b);}
+      else{const id='b'+Date.now().toString(36); S.boats.push(Object.assign({id},r)); setActive(id);}
+      if(!writeLocal()) throw {code:'local'}; boatsArrived(S.boats.slice());
+    }
+    render();
+  }catch(e){
+    if(S.store==='db'&&!(e&&e.code==='quota_exceeded')){
+      // Sin permiso de escritura en la cuenta (p. ej. enlace público): guardar en este navegador.
+      S.store='local'; if(boatsUnsub){try{boatsUnsub()}catch(x){}} S.boats=localBoats(); if(!S.boats.find(b=>b.id===S.activeId)) setActive(null);
+      return saveCurrent(asNew);
+    }
+    S.saveMsg=e&&e.code==='quota_exceeded'?'No hay espacio para más barcos: borra alguno.':'No se ha podido guardar. Inténtalo de nuevo.';renderBoats();}
+}
+async function deleteBoat(id){
+  try{
+    if(S.store==='db') await boatsCol.doc(id).delete();
+    else{S.boats=S.boats.filter(b=>b.id!==id);writeLocal();boatsArrived(S.boats.slice());}
+    if(S.activeId===id) setActive(null); S.confirmDel=null; render();
+  }catch(e){S.confirmDel=null;render();}
+}
+$('save-boat').onclick=()=>saveCurrent(false);
+$('save-new').onclick=()=>saveCurrent(true);
+$('new-boat').onclick=()=>{setActive(null);loadBoat({name:'',loa:11,beam:3.7,cfg:{}});render();$('b-name').focus();};
+$('boat-sel').addEventListener('change',e=>{const id=e.target.value; if(id==='__cur') return; const b=S.boats.find(x=>x.id===id); if(b){setActive(id);loadBoat(b);render();}});
+function renderBoats(){
+  const a=activeBoat(), dirty=a?!same(a,rec()):true;
+  const st=$('save-state');
+  if(S.saveMsg){st.className='dirty';st.textContent=t(S.saveMsg);}
+  else if(!S.loaded){st.className='';st.textContent=t('Cargando…');}
+  else if(a&&!dirty){st.className='';st.textContent=t('Guardado');}
+  else if(a){st.className='dirty';st.textContent=t('Cambios sin guardar');}
+  else {st.className='dirty';st.textContent=t('Sin guardar');}
+  $('save-boat').textContent=a?t('Guardar cambios'):t('Guardar barco'); $('save-new').hidden=!a;
+  $('store-note').textContent=S.store==='db'?t('Se guardan en tu cuenta: los verás al abrir esta página en cualquier dispositivo.'):t('Se guardan solo en este navegador. Si borras los datos del navegador, se pierden.');
+  const ul=$('boat-list'); ul.innerHTML='';
+  if(S.loaded&&!S.boats.length){ul.innerHTML='<li class="empty">'+t('Aún no tienes barcos guardados. Rellena la ficha y pulsa <b>Guardar barco</b>.')+'</li>';}
+  if(!S.loaded){ul.innerHTML='<li class="empty" id="boats-loading">'+t('Cargando tus barcos…')+'</li>';}
+  S.boats.forEach(b=>{
+    const li=document.createElement('li'); li.className='boat'+(b.id===S.activeId?' active':'');
+    const c=b.cfg||{}, rz=c.rizos??2;
+    li.innerHTML=`<div class="boat-top"><span class="boat-name"></span>${b.id===S.activeId?'<span class="pill">'+t('Activo')+'</span>':''}</div>
+      <div class="boat-meta">${t('Eslora')} ${fmtLen(+b.loa)} · ${t('Manga')} ${fmtLen(+b.beam)} · ${c.rig==='tope'?t('A tope'):t('Fraccionado')} · ${t(rz===1?'{n} rizo':'{n} rizos',{n:rz})}${c.enrollador?' · '+t('enrollador'):''}</div>
+      <div class="boat-actions"></div>`;
+    li.querySelector('.boat-name').textContent=b.name||t('Sin nombre');
+    const act=li.querySelector('.boat-actions');
+    const mkb=(tx,cls,fn)=>{const x=document.createElement('button');x.type='button';x.className='mini'+(cls?' '+cls:'');x.textContent=tx;x.onclick=fn;act.appendChild(x);return x;};
+    if(b.id!==S.activeId) mkb(t('Usar este'),'',()=>{setActive(b.id);loadBoat(b);render();});
+    mkb(t('Ir a Trimado'),'',()=>{if(b.id!==S.activeId){setActive(b.id);loadBoat(b);}location.hash='trimado';render();});
+    if(S.confirmDel===b.id){mkb(t('Sí, borrar'),'danger',()=>deleteBoat(b.id));mkb(t('Cancelar'),'',()=>{S.confirmDel=null;renderBoats();});}
+    else mkb(t('Borrar'),'danger',()=>{S.confirmDel=b.id;renderBoats();});
+    ul.appendChild(li);
+  });
+  const sel=$('boat-sel'); sel.innerHTML='';
+  if(!a){const o=document.createElement('option');o.value='__cur';o.textContent=(S.boat.name||t('Sin guardar'))+' · '+fmtLen(S.boat.loa);sel.appendChild(o);}
+  S.boats.forEach(b=>{const o=document.createElement('option');o.value=b.id;o.textContent=(b.name||t('Sin nombre'))+(b.id===S.activeId&&dirty?' '+t('(editado)'):'');sel.appendChild(o);});
+  sel.value=a?a.id:'__cur';
+}
+(async function initStore(){
+  await Promise.resolve();
+  let db=null,uid=null;
+  try{ if(window.claude&&window.claude.use){ db=await window.claude.use('db'); const user=await window.claude.use('user'); uid=user?await user.id():null; } }catch(e){db=null;}
+  if(db&&uid){
+    S.store='db'; boatsCol=db.doc('data/users/'+uid+'/garage').collection('boats');
+    const tm=setTimeout(()=>{if(!S.loaded){const el=document.getElementById('boats-loading'); if(el) el.textContent=t('No consigo cargar tus barcos todavía. Puedes seguir usando la ficha; se cargarán cuando haya conexión.');}},10000);
+    boatsUnsub=boatsCol.onSnapshot(snap=>{ if(!snap.metadata.fromCache) clearTimeout(tm); if(S.store!=="db") return; boatsArrived(snap.docs.map(d=>Object.assign({id:d.id},d.data()))); },
+      ()=>{clearTimeout(tm); if(S.store!=='db') return; S.store='local'; boatsArrived(localBoats());});
+  } else { S.store='local'; boatsArrived(localBoats()); }
+})();
+
+/* ---------- Secciones ---------- */
+const VIEWS=['trimado','problema','barcos'];
+function route(){
+  const h=(location.hash||'').replace('#',''), v=VIEWS.includes(h)?h:'trimado';
+  VIEWS.forEach(x=>{$('v-'+x).hidden=x!==v;});
+  document.querySelectorAll('.tablist a').forEach(a=>{if(a.dataset.view===v)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');});
+}
+window.addEventListener('hashchange',()=>{route();window.scrollTo(0,0);});
+
+/* ---------- Situación (sección ¿Qué te pasa?) ---------- */
+const RUMBOS=[['beat','cenida'],[65,'desc'],[90,'traves'],[130,'largo'],[170,'popa']];
+function buildRumbos(){const el=$('rumbos');el.innerHTML='';RUMBOS.forEach(([v,k])=>{const b=document.createElement('button');b.type='button';b.className='tg';b.dataset.k=k;b.textContent=t(ZN[k]);b.onclick=()=>{const tv=v==='beat'?beatAng(S.tws)+2:v;S.awa=Math.round(apparentFromTrue(tv,S.tws));S.parsed=null;render();};el.appendChild(b);});}
+buildRumbos();
+$('tws2').addEventListener('input',e=>{S.tws=+e.target.value;S.parsed=null;render();});
+function renderCtx(){
+  $('tws2').value=S.tws; $('o-tws2').textContent=S.tws+' kn';
+  const z=zone(TA()); document.querySelectorAll('#rumbos .tg').forEach(b=>b.setAttribute('aria-pressed',b.dataset.k===z.k?'true':'false'));
+  $('ctx-now').textContent=t('{z} con {a}° de aparente, amura de {s}.',{z:z.n,a:S.awa,s:sideName(S.side)});
+  $('ctx-boat').textContent=(S.boat.name||t('Barco sin guardar'))+' · '+fmtLen(S.boat.loa);
+}
+$('b-stw').addEventListener('input',e=>{const v=num(e.target.value);S.stw=v>0?v:null;render();});
+$('perf-go').addEventListener('click',()=>{const k=$('perf-go').dataset.k;if(S.problem!==k){S.problem=k;S.done={};}S.parsed={src:'chip'};render();location.hash='problema';});
+
+/* ---------- Polar ---------- */
+function drawPolar(tw){
+  const svg=$('polar'); svg.innerHTML=''; const cx=34,cy=168,Rp=150;
+  const P=(a,r)=>[cx+r*Math.sin(a*D2R),cy-r*Math.cos(a*D2R)];
+  let vmax=0; for(let a=40;a<=180;a+=2){const v=boatSpeed(a,20);if(v)vmax=Math.max(vmax,v);}
+  const top=Math.ceil(vmax/2)*2||10, sc=Rp/top;
+  for(let s=2;s<=top;s+=2){const[x0,y0]=P(0,s*sc),[x1,y1]=P(180,s*sc);mk('path',{d:`M${x0},${y0} A${s*sc},${s*sc} 0 0 1 ${x1},${y1}`,class:'p-ring'},svg);
+    const tx=mk('text',{x:cx-4,y:cy-s*sc+4,class:'p-lbl','text-anchor':'end'},svg);tx.textContent=s;}
+  for(let a=0;a<=180;a+=30){const[x,y]=P(a,Rp);mk('line',{x1:cx,y1:cy,x2:x,y2:y,class:'p-ax'},svg);const[lx,ly]=P(a,Rp+12);const tx=mk('text',{x:lx,y:ly+4,class:'p-lbl','text-anchor':a===0||a===180?'middle':'start'},svg);tx.textContent=a+'°';}
+  const curve=(tws)=>{const ba=beatAng(tws);let d='';for(let a=Math.ceil(ba);a<=180;a+=2){const v=boatSpeed(a,tws);if(v==null)continue;const[x,y]=P(a,v*sc);d+=(d?'L':'M')+x.toFixed(1)+','+y.toFixed(1);}return d;};
+  [[6,.3],[10,.5],[14,.75],[20,1]].forEach(([w,o])=>{mk('path',{d:curve(w),class:'p-curve','stroke-opacity':o},svg);});
+  const cur=clamp(S.tws,4,24); mk('path',{d:curve(cur),class:'p-cur'},svg);
+  const ba=beatAng(cur),ra=runAng(cur);[ba,ra].forEach(a=>{const[x,y]=P(a,Rp);mk('line',{x1:cx,y1:cy,x2:x,y2:y,class:'p-opt'},svg);});
+  if(tw&&tw.V){const[x,y]=P(tw.twa,tw.V*sc);mk('circle',{cx:x,cy:y,r:6,class:'p-dot'},svg);}
+}
+function renderPolar(){
+  const tws=S.tws,awa=S.awa,L=S.boat.loa,[lo,hi]=PM.loaRange;
+  const w=$('b-warn'); const msgs=[];
+  if(L<lo||L>hi) msgs.push(t('Eslora fuera del rango de datos ({a} a {b}): la polar es una extrapolación.',{a:fmtLen(lo),b:fmtLen(hi)}));
+  const bl=S.boat.beam/L; if(bl<0.24||bl>0.42) msgs.push(t('Manga poco habitual para esa eslora: revisa los datos.'));
+  w.hidden=!msgs.length; w.textContent=msgs.join(' ');
+  $('polar-ctx').textContent=(S.boat.name?S.boat.name+', ':'')+fmtLen(L);
+  const ba=beatAng(tws),ra=runAng(tws);
+  $('k-beat').textContent=Math.round(ba)+'°'; $('k-beat-s').textContent=t('real')+` · ${fmt(boatSpeed(ba,tws))} kn · VMG ${fmt(lin(PM.tws,PM.beatVmgK,tws)*LF())}`;
+  $('k-run').textContent=Math.round(ra)+'°'; $('k-run-s').textContent=t('real')+` · VMG ${fmt(lin(PM.tws,PM.runVmgK,tws)*LF())} kn`;
+  const tw=zone(TA()).k==='proa'?null:trueFromApparent(awa,tws);
+  const perfTxt=$('perf-txt'),meter=$('perf-m'),go=$('perf-go'); go.hidden=true; meter.hidden=true;
+  const note=tws<4?t('Por debajo de 4 kn el modelo no tiene datos: se usa la curva de 4 kn.'):tws>24?t('Por encima de 24 kn el modelo no tiene datos: se usa la curva de 24 kn.'):'';
+  if(tws<=0){$('k-target').textContent='–';$('k-target-s').textContent=t('sin viento');}
+  else if(!tw){$('k-target').textContent='–';$('k-target-s').textContent=t('zona muerta');}
+  else if(!tw.V){$('k-target').textContent='–';$('k-target-s').textContent=t('TWA {a}°: más cerrado que la ceñida óptima, cae',{a:Math.round(tw.twa)});}
+  else {$('k-target').textContent=fmt(tw.V)+' kn';$('k-target-s').textContent=t('TWA {a}° · aparente {w} kn',{a:Math.round(tw.twa),w:fmt(tw.aws,0)});}
+  if(S.stw&&tw&&tw.V){
+    const pct=S.stw/tw.V*100; meter.hidden=false; meter.className='meter '+(pct>=95?'':pct>=85?'mid':'low'); $('perf-bar').style.width=clamp(pct/1.2,2,100)+'%';
+    let tx=t('Vas al {p} % de la polar estimada ({v} kn).',{p:Math.round(pct),v:fmt(tw.V)})+' ';
+    if(pct>105) tx+=t('Por encima: corriente a favor, ola o el modelo infravalora tu barco.');
+    else if(pct>=95) tx+=t('En polar: no toques nada.');
+    else { const hard=band(tws).k==='fresh'||band(tws).k==='strong';
+      tx+=hard?t('Con este viento, ir lento suele ser exceso de escora, no falta de potencia.'):t('Le falta potencia o el trimado no está fino.');
+      go.hidden=false; go.dataset.k=hard?'sobre':'potencia'; go.textContent=t('Ver checklist «{p}»',{p:pName(hard?'sobre':'potencia').toLowerCase()}); }
+    perfTxt.textContent=tx;
+  } else perfTxt.textContent='';
+  $('polar-note').textContent=(note?note+' ':'')+t('Velocidades de barco limpio y bien trimado, sin spinnaker. Úsalo para compararte contigo mismo, no como nota absoluta.')+' '+t('Mete la velocidad en el agua (corredera), no la del GPS: la corriente engaña.');
+  drawPolar(tw);
+}
+
+/* ---------- Lanitas ---------- */
+const TT_ROWS=[['top','Alta'],['mid','Media'],['bot','Baja']];
+const WAVE='M2,7 C6,1 10,13 14,7 S22,1 26,7 S34,12 37,6', STRAIGHT='M2,7 L37,7';
+function ttBtn(bad,okTxt,badTxt,label,onclick){
+  const b=document.createElement('button');b.type='button';b.className='tt';b.dataset.s=bad?'bad':'ok';b.setAttribute('aria-pressed',bad?'true':'false');b.setAttribute('aria-label',label+': '+(bad?badTxt:okTxt));
+  b.innerHTML=`<svg viewBox="0 0 40 14" aria-hidden="true"><path d="${bad?WAVE:STRAIGHT}"/></svg><span>${bad?badTxt:okTxt}</span>`;b.onclick=onclick;return b;
+}
+function renderTT(){
+  const g=$('tt-g'),m=$('tt-m'); g.innerHTML=`<span></span><span class="tt-h">${t('Barlovento')}</span><span class="tt-h">${t('Sotavento')}</span>`; m.innerHTML=`<span></span><span class="tt-h">${t('Lanita de baluma')}</span>`;
+  TT_ROWS.forEach(([k,n])=>{
+    const r=document.createElement('span');r.className='tt-r';r.textContent=t(n);g.appendChild(r);
+    ['w','l'].forEach(side=>g.appendChild(ttBtn(S.tt.g[k][side],t('Vuela'),t('Flamea'),t('Génova')+' · '+t(n).toLowerCase()+' · '+t(side==='w'?'Barlovento':'Sotavento').toLowerCase(),()=>{S.tt.g[k][side]=S.tt.g[k][side]?0:1;renderTT();})));
+    const r2=document.createElement('span');r2.className='tt-r';r2.textContent=t(n);m.appendChild(r2);
+    m.appendChild(ttBtn(S.tt.m[k],t('Vuela'),t('Se esconde'),t('Mayor')+' · '+t('Lanita de baluma').toLowerCase()+' · '+t(n).toLowerCase(),()=>{S.tt.m[k]=S.tt.m[k]?0:1;renderTT();}));
+  });
+  $('tt-out').innerHTML=diagnoseTT();
+}
+$('tt-reset').onclick=()=>{TT_ROWS.forEach(([k])=>{S.tt.g[k]={w:0,l:0};S.tt.m[k]=0;});renderTT();};
+function diagnoseTT(){
+  const c=S.cfg,z=zone(TA()).k,up=z==='cenida'||z==='desc';
+  if(z==='proa') return `<p class="subh">${t('Diagnóstico')}</p><p class="hint">${t('Estás en zona muerta: las lanitas no te dicen nada hasta que caigas a 40–45°.')}</p>`;
+  const G=S.tt.g,M=S.tt.m,gs=[],ms=[];
+  if(z==='popa'){gs.push(t('En popa el génova va tapado y sus lanitas no son fiables. Guíate por la mayor y el ángulo.'));}
+  else{
+    const err=k=>(G[k].l?1:0)-(G[k].w?1:0), turb=TT_ROWS.filter(([k])=>G[k].w&&G[k].l).length;
+    const e={top:err('top'),mid:err('mid'),bot:err('bot')}, mean=(e.top+e.mid+e.bot)/3, tw=e.top-e.bot;
+    const any=TT_ROWS.some(([k])=>G[k].w||G[k].l);
+    if(!any) gs.push(t('<span class="good">Génova: las seis vuelan. Trimado bueno.</span>'));
+    else if(turb>=2) gs.push(t('Barlovento y sotavento flamean a la vez: viento muy flojo o sucio (tapado por la mayor u otro barco). Cae un poco para ganar velocidad y dale bolsa.'));
+    else{
+      if(tw<=-1) gs.push(t(c.escotero?'<b>Adelanta el escotero.</b> La parte alta abre de más (rompe arriba antes que abajo). Muévelo hasta que, al orzar, las tres de barlovento rompan a la vez.':'<b>La parte alta abre de más.</b> Sin escotero ajustable, caza un pelo de escota y acepta que la baja vaya algo cazada.'));
+      if(tw>=1) gs.push(t(c.escotero?'<b>Retrasa el escotero.</b> La parte alta va cerrada respecto a la baja. Muévelo hasta que las tres rompan a la vez.':'<b>La parte alta va cerrada.</b> Sin escotero ajustable, larga un pelo de escota.'));
+      if(mean<-0.2) gs.push(t(up?'<b>Cae un poco o caza la escota del génova.</b> Flamea barlovento: vas demasiado orzado o la vela demasiado largada.':'<b>Caza la escota del génova.</b> A rumbos abiertos, primero vela y luego timón.'));
+      if(mean>0.2) gs.push(t(up?'<b>Orza un poco o larga la escota.</b> Flamea sotavento: el flujo se despega, vas caído o sobrecazado.':'<b>Larga la escota del génova</b> hasta que la de barlovento se levante y caza un poco.'));
+      if(!gs.length) gs.push(t('Las lanitas se compensan entre alturas: retoca el escotero hasta que las tres rompan a la vez al orzar.'));
+    }
+  }
+  const h={top:!!M.top,mid:!!M.mid,bot:!!M.bot}, nh=h.top+h.mid+h.bot;
+  if(z==='popa') ms.push(t('En popa las lanitas de baluma casi siempre se esconden: no son fiables.'));
+  else if(nh===0) ms.push(t(up?'<span class="good">Mayor: la baluma descarga.</span> En ceñida, si la alta vuela siempre, puedes cazar un pelo más: lo ideal es que se esconda a ratos.':'<span class="good">Mayor: la baluma descarga bien.</span>'));
+  else if(nh===3) ms.push(t(up&&c.carro?'<b>Mayor sobrecazada.</b> Larga escota hasta que vuelvan a salir y sube el carro a barlovento para mantener la botavara en el eje.':'<b>Mayor sobrecazada.</b> Larga escota hasta que vuelvan a salir.'));
+  else if(h.top&&!h.bot){
+    if(up){
+      let s=t(h.mid?'<b>Baluma alta y media cerradas.</b>':'<b>Baluma alta cerrada.</b>')+' '+t(c.carro?'Larga un poco de escota y sube el carro a barlovento.':'Larga un poco de escota.');
+      if(c.backstay&&c.rig==='fraccionado') s+=' '+t('Con viento, cazar el tensor del estay de popa también la abre.');
+      ms.push(s);
+    } else ms.push(t('<b>Baluma alta cerrada.</b>')+' '+t(c.contra?'Afloja la contra para que la parte alta abra.':'Larga un poco de escota.'));
+  }
+  else if(h.bot&&!h.top) ms.push(t('<b>Parte baja ahogada.</b>')+' '+t(c.pujamen?'Caza el pujamen para aplanar abajo.':'Larga un pelo de escota.'));
+  else ms.push(t('<b>Revisa la escota de mayor:</b> larga un pelo y mira si salen.'));
+  const Lh=a=>a.map(x=>`<li>${x}</li>`).join('');
+  return `<p class="subh">${t('Qué hacer')}</p><div><p class="tt-h" style="margin:0 0 4px">${t('Génova')}</p><ol>${Lh(gs)}</ol></div><div><p class="tt-h" style="margin:0 0 4px">${t('Mayor')}</p><ol>${Lh(ms)}</ol></div>`;
+}
+
+/* ---------- Textos estáticos ---------- */
+const STATIC=[];
+(function collect(){
+  const skip=new Set(['SCRIPT','STYLE','SVG','svg']);
+  const dyn=new Set(['r-ang','r-zone','r-amura','r-zdesc','o-awa','o-tws','o-tws2','polar-ctx','trim-ctx','ctx-boat','ctx-now','save-state','store-note','boat-list','boat-sel','checklist','understood','chips','tt-g','tt-m','tt-out','reefbox','t-mayor','t-genova','k-target','k-target-s','k-beat','k-beat-s','k-run','k-run-s','perf-txt','polar-note','cl-title','cl-why','cl-prog','omitted','b-warn','tg-mayor','tg-genova','rumbos','save-boat','perf-go','langs']);
+  function walk(el){
+    if(el.tagName==='svg'){const v=el.getAttribute('aria-label'); if(v) STATIC.push({el,attr:'aria-label',key:v}); return;}
+    if(skip.has(el.tagName)||dyn.has(el.id)) return;
+    if(el.hasAttribute&&el.hasAttribute('data-i')){STATIC.push({el,key:el.innerHTML.replace(/\s+/g,' ').trim(),html:true});return;}
+    ['placeholder','aria-label'].forEach(a=>{const v=el.getAttribute&&el.getAttribute(a); if(v) STATIC.push({el,attr:a,key:v});});
+    el.childNodes.forEach(n=>{
+      if(n.nodeType===3){const k=n.nodeValue.replace(/\s+/g,' ').trim(); if(k&&/[A-Za-zÁÉÍÓÚáéíóúñ¿]/.test(k)) STATIC.push({node:n,key:k,pre:n.nodeValue.match(/^\s*/)[0],post:n.nodeValue.match(/\s*$/)[0]});}
+      else if(n.nodeType===1) walk(n);
+    });
+  }
+  walk(document.querySelector('.wrap'));
+})();
+const EXAMPLES=['Con viento de 15 nudos me voy de orzada y estoy sufriendo'];
+function applyStatic(){
+  STATIC.forEach(s=>{
+    if(s.node) s.node.nodeValue=s.pre+t(s.key)+s.post;
+    else if(s.attr) s.el.setAttribute(s.attr,t(s.key));
+    else if(s.html) s.el.innerHTML=t(s.key);
+  });
+  const q=$('q'); if(!q.value.trim()||S.qDefault===q.value){q.value=t(EXAMPLES[0]);S.qDefault=q.value;}
+  [['boat-sel','Barco activo'],['chips','O elige el problema'],['langs','Idioma']].forEach(([id,k])=>$(id).setAttribute('aria-label',t(k)));
+  document.documentElement.lang=S.lang;
+  document.querySelectorAll('#langs button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===S.lang?'true':'false'));
+}
+S.qDefault=$('q').value;
+document.querySelectorAll('#langs button').forEach(b=>b.onclick=()=>{
+  S.lang=b.dataset.v; try{localStorage.setItem('trim-lang',S.lang)}catch(e){}
+  applyStatic(); buildToggles($('tg-mayor'),MAYOR_T); buildToggles($('tg-genova'),GEN_T); buildChips(); buildRumbos(); fillFicha(); render();
+});
+
+/* ---------- Render ---------- */
+function li(r){return `<li><span class="ctl">${r.c}${r.p?`<span class="part">${r.p}</span>`:''}</span><span class="val">${r.v}${r.alt?`<span class="alt">${r.alt}</span>`:''}</span></li>`;}
+function render(){
+  const z=zone(TA());
+  $('awa').value=S.awa; $('o-awa').textContent=S.awa+'°'; $('tws').value=S.tws; $('o-tws').textContent=S.tws+' kn';
+  $('r-ang').textContent=S.awa+'°'; $('r-zone').textContent=z.n; $('r-zdesc').textContent=t('Ángulo real ≈ {a}°.',{a:Math.round(TA())})+' '+z.d;
+  const am=$('r-amura'); am.className='amura '+S.side; am.textContent=t(S.side==='estribor'?'Amura de estribor':'Amura de babor');
+  drawDial();
+  const tr=trim(); $('t-mayor').innerHTML=tr.M.map(li).join(''); $('t-genova').innerHTML=tr.G.map(li).join('');
+  $('trim-ctx').textContent='';
+  const ra=reefAdvice(); $('reefbox').innerHTML=`<strong>${ra.h}</strong><span>${ra.d}</span>`;
+  document.querySelectorAll('#chips .chip').forEach(c=>c.setAttribute('aria-pressed',c.dataset.k===S.problem?'true':'false'));
+  renderUnderstood();
+  renderChecklist();
+  renderPolar();
+  renderTT();
+  renderCtx();
+  renderBoats();
+}
+route();
+if(S.lang!=='es'){applyStatic(); buildToggles($('tg-mayor'),MAYOR_T); buildToggles($('tg-genova'),GEN_T); buildChips(); buildRumbos(); fillFicha();}
+else applyStatic();
+applyParse($('q').value);
+})();
+</script>
+</body>
+</html>
