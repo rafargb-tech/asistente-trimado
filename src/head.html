@@ -1,0 +1,509 @@
+<title>Asistente de Trimado</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: mesa de cartas. Instrumento de viento oscuro (pantalla de a bordo) sobre papel de carta; secciones separadas por filetes, no tarjetas. Magenta de carta náutica de día, rojo de iluminación nocturna de noche. Babor rojo / estribor verde. */
+:root{
+  --bg:#F3F5F4; --surface:#FFFFFF; --ink:#0F2230; --muted:#5A6B72; --line:#D6DEE0; --line-strong:#A9B8BD;
+  --sea:#1F5F7F; --sea-soft:#E2ECF0; --accent:#A8195C; --accent-soft:#F6E2EB;
+  --port:#C0302B; --stbd:#17804B; --warn:#9C640F;
+  --inst-bg:#0D161B; --inst-face:#121D23; --inst-ink:#E4ECEE; --inst-muted:#8C9CA2; --inst-line:#26363F; --inst-accent:#F2578F; --inst-sea:#7DB4CF; --inst-sea-soft:#192A33;
+  --f-display:"IBM Plex Sans Condensed","Arial Narrow",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]):not([data-mode="light"]){
+  --bg:#080C0F; --surface:#0F171C; --ink:#D3DCDF; --muted:#7E8D93; --line:#1D2930; --line-strong:#33444D;
+  --sea:#6AA3BF; --sea-soft:#12222A; --accent:#FF5A4E; --accent-soft:#361412;
+  --port:#EE625A; --stbd:#3CBD7C; --warn:#DDA247;
+  --inst-bg:#0B1115; --inst-face:#0F171C; --inst-ink:#D3DCDF; --inst-muted:#7E8D93; --inst-line:#22313A; --inst-accent:#FF5A4E; --inst-sea:#6AA3BF; --inst-sea-soft:#14242C; color-scheme:dark}}
+:root[data-theme="dark"]:not([data-mode="light"]),:root[data-mode="dark"]{
+  --bg:#080C0F; --surface:#0F171C; --ink:#D3DCDF; --muted:#7E8D93; --line:#1D2930; --line-strong:#33444D;
+  --sea:#6AA3BF; --sea-soft:#12222A; --accent:#FF5A4E; --accent-soft:#361412;
+  --port:#EE625A; --stbd:#3CBD7C; --warn:#DDA247;
+  --inst-bg:#0B1115; --inst-face:#0F171C; --inst-ink:#D3DCDF; --inst-muted:#7E8D93; --inst-line:#22313A; --inst-accent:#FF5A4E; --inst-sea:#6AA3BF; --inst-sea-soft:#14242C; color-scheme:dark}
+:root[data-mode="light"]{color-scheme:light}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:14px 40px;transition:background-color .2s}
+.wrap{max-width:1200px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+h1,h2,h3{font-family:var(--f-display);margin:0;text-wrap:balance}
+button{font-family:inherit}
+.hint{font-size:13px;color:var(--muted);margin:0}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* Barra superior */
+.appbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.mark{width:34px;height:34px;flex:none}
+.mark .m1{fill:var(--ink)} .mark .m2{fill:var(--accent)} .mark .m3{stroke:var(--ink);stroke-width:1.6;fill:none}
+.brand h1{font-weight:600;font-size:23px;line-height:1.05;letter-spacing:-.005em}
+.ver{display:block;font:500 11.5px/1.3 var(--f-mono);color:var(--muted);letter-spacing:.02em}
+.prefs{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-left:auto;justify-content:flex-end}
+.seg{display:inline-flex;border:1px solid var(--line-strong);border-radius:3px;overflow:hidden;background:var(--surface)}
+.seg button{appearance:none;border:0;background:transparent;color:var(--muted);font:600 13px/1 var(--f-body);padding:8px 11px;cursor:pointer;min-height:34px}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.seg.small button{padding:7px 9px;font-size:12px}
+.themes svg{width:14px;height:14px;display:block;fill:none;stroke:currentColor;stroke-width:1.8}
+.themes button{display:inline-flex;align-items:center;gap:6px}
+
+/* Pestañas */
+.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line-strong)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.tablist{display:flex;gap:22px;flex-wrap:wrap}
+.tablist a{font:600 15.5px/1 var(--f-display);color:var(--muted);text-decoration:none;padding:14px 0 12px;border-bottom:2px solid transparent;margin-bottom:-1px}
+.tablist a[aria-current="page"]{color:var(--ink);border-bottom-color:var(--accent)}
+.tablist a:hover{color:var(--ink)}
+.boatbar{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);min-width:0;padding-block:6px}
+.boatbar select{font:500 14px var(--f-body);padding:6px 8px;border:1px solid var(--line-strong);border-radius:3px;background:var(--surface);color:var(--ink);max-width:240px;min-width:0}
+
+/* Rejilla y secciones */
+.grid{display:grid;grid-template-columns:1fr;gap:28px;align-items:start}
+@media (min-width:980px){.grid{grid-template-columns:400px minmax(0,1fr);gap:36px}}
+.col{display:flex;flex-direction:column;gap:26px;min-width:0}
+section.panel{border-top:1px solid var(--line-strong);padding-top:12px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.panel-h{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.panel-h h2{font-weight:600;font-size:20px;letter-spacing:-.005em}
+.panel-h .hint{font-size:12.5px}
+
+/* Instrumento (siempre oscuro) */
+section.panel.instrument{--ink:var(--inst-ink);--muted:var(--inst-muted);--line:var(--inst-line);--line-strong:var(--inst-line);--surface:var(--inst-face);--accent:var(--inst-accent);--sea:var(--inst-sea);--sea-soft:var(--inst-sea-soft);--bg:var(--inst-bg);
+  background:var(--inst-bg);color:var(--ink);border:0;border-radius:8px;padding:16px 18px 18px;border:1px solid var(--inst-line);box-shadow:0 1px 0 rgba(0,0,0,.04),0 10px 30px -18px rgba(5,20,30,.55)}
+.instrument .panel-h h2{font:500 12px/1 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.instrument .seg{background:transparent}
+
+/* Ficha y equipo */
+.cfg-group{display:flex;flex-direction:column;gap:8px}
+.cfg-group h3{font:600 13px/1.2 var(--f-display);color:var(--muted)}
+.toggles{display:flex;flex-wrap:wrap;gap:6px}
+.tg{appearance:none;border:1px solid var(--line-strong);background:var(--surface);color:var(--muted);font:500 14px/1.1 var(--f-body);padding:8px 11px 8px 9px;border-radius:3px;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+.tg::before{content:"";width:13px;height:13px;border-radius:2px;border:1.5px solid var(--line-strong);flex:none;background:transparent}
+.tg[aria-pressed="true"]{color:var(--ink);border-color:var(--sea)}
+.tg[aria-pressed="true"]::before{border-color:var(--sea);background:var(--sea) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 6.2 5 8.6 9.6 3.6' fill='none' stroke='white' stroke-width='1.8'/%3E%3C/svg%3E") center/11px no-repeat}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+#rumbos .tg::before{border-radius:50%}
+#rumbos .tg[aria-pressed="true"]::before{background:radial-gradient(var(--sea) 0 3px,transparent 3.5px);border-color:var(--sea)}
+.legend{font-size:12.5px;color:var(--muted);border-top:1px solid var(--line);padding-top:10px;margin:0}
+.legend b{color:var(--ink);font-weight:600}
+.ficha{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.field{display:flex;flex-direction:column;gap:4px;min-width:0}
+.field label{font-size:12.5px;font-weight:500;color:var(--muted)}
+.field input{font:500 16px var(--f-body);padding:9px 10px;border:1px solid var(--line-strong);border-radius:3px;background:var(--surface);color:var(--ink);width:100%;min-width:0}
+.field input[type=number]{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.field.full{grid-column:1/-1}
+.warn{color:var(--warn);font-size:13px;margin:0}
+
+/* Dial y lectura */
+.dial-wrap{display:flex;flex-direction:column;align-items:center;gap:8px}
+#dial{width:100%;max-width:330px;aspect-ratio:1;touch-action:none;cursor:grab;user-select:none}
+#dial:active{cursor:grabbing}
+.readout{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;justify-content:center}
+.big{font:500 50px/1 var(--f-mono);font-variant-numeric:tabular-nums;letter-spacing:-.03em}
+.zone{font:600 24px/1 var(--f-display)}
+.amura{font:600 11.5px/1 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;padding:5px 7px;border-radius:2px;color:#fff}
+.amura.estribor{background:var(--stbd)} .amura.babor{background:var(--port)}
+.zone-d{font-size:13.5px;color:var(--muted);text-align:center;max-width:44ch;margin:0}
+.slider{display:grid;grid-template-columns:84px 1fr 66px;gap:10px;align-items:center}
+.slider label{font-weight:500;font-size:13.5px;color:var(--muted)}
+.slider output{font:500 20px var(--f-mono);font-variant-numeric:tabular-nums;text-align:right;color:var(--ink)}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.instrument .hint{color:var(--muted)}
+
+/* Trimado */
+.trim-grid{display:grid;grid-template-columns:1fr;gap:20px}
+@media (min-width:700px){.trim-grid{grid-template-columns:1fr 1fr;gap:28px}}
+.sail h3{font-weight:600;font-size:16px;border-bottom:1px solid var(--ink);padding-bottom:6px}
+.sail ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.sail li{display:grid;grid-template-columns:104px 1fr;gap:12px;padding:9px 0;border-bottom:1px solid var(--line)}
+.sail li:last-child{border-bottom:0}
+.ctl{font-weight:600;font-size:14px;display:flex;flex-direction:column;gap:2px}
+.part{font:500 10.5px/1.2 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.val{font-size:14px;min-width:0}
+.val .alt{display:block;color:var(--warn);font-size:13px;margin-top:3px}
+.reefbox{display:flex;gap:14px;align-items:baseline;flex-wrap:wrap;padding:10px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);font-size:14px}
+.reefbox strong{font:600 13px/1.2 var(--f-mono);letter-spacing:.04em;text-transform:uppercase;color:var(--accent);white-space:nowrap}
+.reefbox span{flex:1 1 240px;min-width:0}
+
+/* Polar */
+.kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+.kpi{padding:2px 10px;display:flex;flex-direction:column;gap:3px;min-width:0;border-left:1px solid var(--line)}
+.kpi:first-child{padding-left:0;border-left:0}
+.kpi span{font-size:12px;color:var(--muted)}
+.kpi b{font:500 22px/1.1 var(--f-mono);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.kpi small{font-size:11.5px;color:var(--muted);line-height:1.35}
+#polar{width:100%;max-width:340px;display:block;margin:0 auto}
+.p-ring{fill:none;stroke:var(--line);stroke-width:1}
+.p-ax{stroke:var(--line);stroke-width:1}
+.p-lbl{fill:var(--muted);font:500 10.5px var(--f-mono)}
+.p-curve{fill:none;stroke:var(--sea);stroke-width:1.7}
+.p-cur{fill:none;stroke:var(--accent);stroke-width:2.2;stroke-dasharray:5 3}
+.p-dot{fill:var(--accent);stroke:var(--bg);stroke-width:2}
+.p-opt{stroke:var(--ink);stroke-width:1;stroke-dasharray:2 3}
+.perf{display:flex;flex-direction:column;gap:8px}
+.perf-row{display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap}
+.meter{height:6px;background:var(--line);border-radius:3px;overflow:hidden;position:relative}
+.meter i{position:absolute;top:0;bottom:0;left:0;background:var(--stbd);border-radius:3px}
+.meter.mid i{background:var(--warn)} .meter.low i{background:var(--accent)}
+.linkbtn{appearance:none;border:0;background:none;color:var(--accent);font:600 13.5px var(--f-body);padding:4px 0;cursor:pointer;align-self:flex-start;text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px}
+
+/* Lanitas */
+.tt-wrap{display:grid;grid-template-columns:1fr;gap:22px}
+@media (min-width:760px){.tt-wrap{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
+.tt-col{display:flex;flex-direction:column;gap:16px;min-width:0}
+.tt-grid{display:grid;gap:6px;align-items:center}
+.tt-grid.g{grid-template-columns:56px minmax(0,1fr) minmax(0,1fr)}
+.tt-grid.m{grid-template-columns:56px minmax(0,1fr)}
+.tt-h{font:500 10.5px/1.2 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.tt-r{font-size:13px;font-weight:500;color:var(--muted)}
+.tt{appearance:none;border:1px solid var(--line-strong);background:var(--surface);border-radius:3px;padding:7px 8px;cursor:pointer;display:flex;align-items:center;gap:8px;color:var(--ink);font:500 13px var(--f-body);min-width:0;text-align:left}
+.tt svg{width:36px;height:14px;flex:none}
+.tt path{fill:none;stroke-width:2.2;stroke-linecap:round}
+.tt[data-s="ok"] path{stroke:var(--stbd)}
+.tt[data-s="bad"]{border-color:var(--accent);color:var(--accent)}
+.tt[data-s="bad"] path{stroke:var(--accent)}
+.tt-out{display:flex;flex-direction:column;gap:12px;min-width:0}
+.tt-out ol{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:8px;font-size:14px}
+.tt-out .good{color:var(--stbd);font-weight:600}
+.subh{font:600 15px/1.3 var(--f-display);margin:0 0 8px}
+
+/* ¿Qué te pasa? */
+.ask{display:flex;flex-direction:column;gap:8px}
+.ask-row{display:flex;gap:8px;flex-wrap:wrap}
+#q{flex:1 1 260px;min-width:0;font:400 15px/1.4 var(--f-body);padding:11px 12px;border:1px solid var(--line-strong);border-radius:3px;background:var(--surface);color:var(--ink)}
+.btn{appearance:none;border:1px solid var(--ink);background:var(--ink);color:var(--bg);font:600 14px/1 var(--f-body);padding:12px 18px;border-radius:3px;cursor:pointer}
+.btn:hover{opacity:.9}
+.btn.ghost{background:transparent;color:var(--ink);border-color:var(--line-strong)}
+.examples{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:13px;color:var(--muted);align-items:baseline}
+.ex{appearance:none;border:0;background:none;color:var(--sea);font:400 13px/1.35 var(--f-body);text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px;cursor:pointer;padding:2px 0;text-align:left}
+.chips{display:grid;grid-template-columns:1fr;column-gap:24px}
+@media (min-width:560px){.chips{grid-template-columns:1fr 1fr}}
+.chip{appearance:none;border:0;border-bottom:1px solid var(--line);background:none;color:var(--ink);font:400 14.5px/1.3 var(--f-body);padding:10px 2px;cursor:pointer;text-align:left;display:flex;gap:10px;align-items:center}
+.chip::before{content:"";width:12px;height:12px;border-radius:50%;border:1.5px solid var(--line-strong);flex:none}
+.chip[aria-pressed="true"]{font-weight:600}
+.chip[aria-pressed="true"]::before{border-color:var(--accent);background:radial-gradient(var(--accent) 0 3.5px,transparent 4px)}
+.understood{font-size:13.5px;padding:2px 0 2px 12px;border-left:2px solid var(--sea)}
+.understood.err{border-left-color:var(--warn)}
+.understood b{font-weight:600}
+.understood:empty{display:none}
+.cl-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;margin-top:6px}
+.cl-head h3{font-weight:600;font-size:21px}
+.progress{font:500 13px var(--f-mono);color:var(--muted);font-variant-numeric:tabular-nums}
+.why{font-size:14px;margin:0;color:var(--muted);max-width:68ch}
+ol.checklist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;counter-reset:s}
+ol.checklist li{counter-increment:s;display:grid;grid-template-columns:26px 1fr auto;gap:10px;align-items:start;padding:12px 0;border-top:1px solid var(--line)}
+ol.checklist input{width:18px;height:18px;margin:2px 0 0;accent-color:var(--stbd);cursor:pointer}
+.st-t{font-weight:600;font-size:15px;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.st-t::before{content:counter(s,decimal-leading-zero);font:500 12px var(--f-mono);color:var(--muted)}
+.st-d{font-size:14px;color:var(--muted);margin-top:3px;max-width:70ch}
+li.done .st-t,li.done .st-d{opacity:.45;text-decoration:line-through}
+.stat{font:500 11px/1.2 var(--f-mono);letter-spacing:.05em;text-transform:uppercase;white-space:nowrap;display:inline-flex;align-items:center;gap:6px;padding-top:3px}
+.stat::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.stat.now{color:var(--accent)} .stat.next{color:var(--warn)} .stat.later{color:var(--muted)}
+.stat.later::before{background:transparent;border:1.5px solid currentColor;width:6px;height:6px}
+.kind{font:500 10.5px/1 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-right:2px}
+li.reef .kind{color:var(--sea)}
+.omitted{font-size:13px;color:var(--muted);margin:0}
+details.proc{border-top:1px solid var(--line-strong);padding-top:10px}
+details.proc summary{cursor:pointer;font:600 16px var(--f-display)}
+details.proc ol{margin:10px 0 0;padding-left:22px;display:flex;flex-direction:column;gap:6px;font-size:14px}
+
+/* Mis barcos */
+.save-row{display:flex;gap:8px;flex-wrap:wrap}
+.boats{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.boat{border-bottom:1px solid var(--line);padding:12px 0;display:flex;flex-direction:column;gap:8px}
+.boat.active{background:var(--sea-soft);padding:12px 12px;border-radius:3px;border-bottom-color:transparent}
+.boat-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+.boat-name{font:600 18px/1.15 var(--f-display)}
+.boat-meta{font:400 12.5px/1.4 var(--f-mono);color:var(--muted)}
+.boat-actions{display:flex;gap:6px;flex-wrap:wrap}
+.mini{appearance:none;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);font:500 13px var(--f-body);padding:6px 10px;border-radius:3px;cursor:pointer}
+.mini.danger{border-color:transparent;background:none;color:var(--port);text-decoration:underline;text-underline-offset:3px}
+.pill{font:500 10.5px/1 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--sea)}
+.empty{border:1px dashed var(--line-strong);border-radius:3px;padding:16px;font-size:14px;color:var(--muted)}
+#save-state{font:500 12px var(--f-mono)}
+#save-state.dirty{color:var(--warn)}
+
+footer{font-size:12.5px;color:var(--muted);border-top:1px solid var(--line-strong);padding-top:12px;display:flex;flex-direction:column;gap:6px;max-width:110ch}
+footer p{margin:0}
+
+/* SVG del dial (usa los tokens del instrumento) */
+.d-face{fill:var(--surface);stroke:var(--line);stroke-width:1.5}
+.d-ring{fill:none;stroke:var(--line);stroke-width:1}
+.d-tick{stroke:var(--muted);stroke-width:1}
+.d-tick.maj{stroke:var(--ink);stroke-width:1.8}
+.d-lbl{fill:var(--muted);font:500 11px var(--f-mono);text-anchor:middle;dominant-baseline:middle}
+.d-nogo{fill:var(--accent);fill-opacity:.13}
+.d-stbd{fill:none;stroke:var(--stbd);stroke-width:4}
+.d-port{fill:none;stroke:var(--port);stroke-width:4}
+.d-hull{fill:var(--sea-soft);stroke:var(--ink);stroke-width:1.5}
+.d-cock{fill:var(--bg);stroke:var(--ink);stroke-width:1}
+.d-boom{stroke:var(--ink);stroke-width:2.4;stroke-linecap:round}
+.d-main{fill:var(--sea);fill-opacity:.4;stroke:var(--sea);stroke-width:1.6}
+.d-gen{fill:var(--ink);fill-opacity:.18;stroke:var(--ink);stroke-width:1.4}
+.d-luff{stroke-dasharray:4 3}
+.d-mast{fill:var(--ink)}
+.d-wind{fill:var(--accent);stroke:var(--bg);stroke-width:2}
+.d-wind-in{fill:var(--bg)}
+.d-arrow{stroke:var(--accent);stroke-width:3;stroke-linecap:round;fill:none}
+.d-arrowhead{fill:var(--accent)}
+@media (prefers-reduced-motion:reduce){body{transition:none}}
+/* v3.2: menos etiquetas, menos ruido */
+.meta{font-size:12.5px;color:var(--muted)}
+.ver{font:400 12px/1.3 var(--f-body);letter-spacing:0}
+.part{font:400 12px/1.3 var(--f-body);letter-spacing:0;text-transform:none;color:var(--muted)}
+.tt-h{font:500 12px/1.3 var(--f-body);letter-spacing:0;text-transform:none}
+.kind{display:none}
+.stat{font:500 12px/1.3 var(--f-body);letter-spacing:0;text-transform:none;padding-top:2px}
+.stat::before,.stat.later::before{display:none}
+.st-t::before{content:none}
+ol.checklist li{grid-template-columns:24px 1fr auto}
+ol.checklist li.cl-sep{display:block;padding:18px 0 6px;font:600 14px/1.3 var(--f-display);color:var(--sea);border-top:1px solid var(--line-strong)}
+ol.checklist li.cl-sep+li{border-top:0}
+.reefbox strong{font:600 14px/1.3 var(--f-body);letter-spacing:0;text-transform:none}
+.progress{font:400 13px var(--f-body)}
+#save-state{font:400 12.5px var(--f-body)}
+.boat-meta{font:400 13px/1.4 var(--f-body)}
+.pill{font:500 12px/1 var(--f-body);letter-spacing:0;text-transform:none}
+.amura{font:600 12px/1 var(--f-body);letter-spacing:.01em;text-transform:none;padding:4px 7px}
+.themes button{padding:7px 9px}
+.themes svg{width:15px;height:15px}
+.instrument{padding-top:18px}
+details.about{font-size:13px;color:var(--muted)}
+details.about summary{cursor:pointer;color:var(--ink);font-weight:500;font-size:13.5px}
+details.about p{margin:8px 0 0;max-width:62ch}
+.examples{gap:2px 14px}
+footer{max-width:none}
+
+</style>
+
+<div class="wrap">
+  <header class="appbar">
+    <div class="brand">
+      <svg class="mark" viewBox="0 0 34 34" aria-hidden="true"><path class="m3" d="M3 28.5c4 0 4-2 8-2s4 2 8 2 4-2 8-2 4 2 4 2"/><path class="m1" d="M16 3v21H6.5z"/><path class="m2" d="M18 6l9.5 18H18z"/></svg>
+      <div><h1>Asistente de Trimado</h1><span class="ver">Prototipo v3.4</span></div>
+    </div>
+    <div class="prefs">
+      <div class="seg small langs" id="langs" role="group" aria-label="Idioma"><button type="button" data-v="es" lang="es">ES</button><button type="button" data-v="en" lang="en">EN</button><button type="button" data-v="fr" lang="fr">FR</button></div>
+      <div class="seg small themes" id="themes" role="group" aria-label="Tema">
+        <button type="button" data-v="auto" aria-label="Automático" title="Automático"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="5.5"/><path d="M8 2.5v11a5.5 5.5 0 0 0 0-11z" fill="currentColor" stroke="none"/></svg></button>
+        <button type="button" data-v="light" aria-label="Día" title="Día"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="3"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3 3l1.4 1.4M11.6 11.6 13 13M3 13l1.4-1.4M11.6 4.4 13 3"/></svg></button>
+        <button type="button" data-v="dark" aria-label="Noche" title="Noche"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M13 10.2A5.5 5.5 0 0 1 5.8 3 5.5 5.5 0 1 0 13 10.2z"/></svg></button>
+      </div>
+    </div>
+  </header>
+
+  <nav class="tabs" aria-label="Secciones">
+    <div class="tablist">
+      <a href="#trimado" data-view="trimado">Trimado</a>
+      <a href="#problema" data-view="problema">¿Qué te pasa?</a>
+      <a href="#barcos" data-view="barcos">Mis barcos</a>
+    </div>
+    <label class="boatbar"><span>Barco</span><select id="boat-sel" aria-label="Barco activo"></select></label>
+  </nav>
+
+  <div class="view" id="v-trimado">
+  <div class="grid">
+    <div class="col">
+      <section class="panel instrument" aria-label="Viento">
+        <div class="dial-wrap">
+          <svg id="dial" viewBox="0 0 300 300" role="img" aria-label="Dial de viento aparente">
+            <g id="d-static"></g>
+            <g id="d-sails"></g>
+            <g id="d-windg"></g>
+          </svg>
+          <div class="readout">
+            <span class="big" id="r-ang">45°</span>
+            <span class="zone" id="r-zone">Ceñida</span>
+            <span class="amura estribor" id="r-amura">Amura de estribor</span>
+          </div>
+          <p class="zone-d" id="r-zdesc"></p>
+        </div>
+        <div class="slider">
+          <label for="awa">Aparente</label>
+          <input type="range" id="awa" min="0" max="180" step="1" value="45">
+          <output id="o-awa">45°</output>
+        </div>
+        <div class="slider">
+          <label for="tws">Real</label>
+          <input type="range" id="tws" min="0" max="40" step="1" value="15">
+          <output id="o-tws">15 kn</output>
+        </div>
+      </section>
+
+      <section class="panel" aria-labelledby="h-polar">
+        <div class="panel-h"><h2 id="h-polar">Polar estimada</h2><span class="meta" id="polar-ctx"></span></div>
+        <div class="kpis">
+          <div class="kpi"><span>Objetivo</span><b id="k-target">–</b><small id="k-target-s"></small></div>
+          <div class="kpi"><span>Ceñida óptima</span><b id="k-beat">–</b><small id="k-beat-s"></small></div>
+          <div class="kpi"><span>Popa óptima</span><b id="k-run">–</b><small id="k-run-s"></small></div>
+        </div>
+        <svg id="polar" viewBox="0 0 300 335" role="img" aria-label="Diagrama polar estimado de tu barco"></svg>
+        <div class="perf">
+          <div class="perf-row">
+            <div class="field" style="flex:0 0 150px"><label for="b-stw">Velocidad en el agua</label><input id="b-stw" type="number" step="0.1" min="0" max="30" inputmode="decimal" placeholder="kn"></div>
+            <p class="hint" id="perf-txt" style="flex:1 1 170px"></p>
+          </div>
+          <div class="meter" id="perf-m" hidden><i id="perf-bar"></i></div>
+          <button type="button" class="linkbtn" id="perf-go" hidden></button>
+        </div>
+        <details class="about">
+          <summary>Cómo se calcula</summary>
+          <p id="polar-note"></p>
+          <p>Mediana de las predicciones VPP de 73 cruceros sin spinnaker, de 8,3 a 15,4 m y con certificado ORC (datos públicos en github.com/jieter/orc-data), escalada por eslora. Frente a esos VPP el error típico es del 3 %; en 9 de cada 10 casos, menos del 11 %. La manga no mejoró la predicción y no entra en el cálculo.</p>
+          <p>Azul: 6, 10, 14 y 20 kn de viento real, más oscuro cuanto más viento. Discontinua: tu viento ahora. Punteadas: ángulos óptimos de ceñida y popa.</p>
+        </details>
+      </section>
+    </div>
+    <div class="col">
+      <section class="panel" aria-labelledby="h-trim">
+        <div class="panel-h"><h2 id="h-trim">Trimado para este rumbo</h2><span class="meta" id="trim-ctx"></span></div>
+        <div class="reefbox" id="reefbox"></div>
+        <div class="trim-grid">
+          <div class="sail"><h3>Mayor</h3><ul id="t-mayor"></ul></div>
+          <div class="sail"><h3>Génova</h3><ul id="t-genova"></ul></div>
+        </div>
+      </section>
+
+      <section class="panel" aria-labelledby="h-tt">
+        <div class="panel-h"><h2 id="h-tt">Lanitas</h2></div>
+        <div class="tt-wrap">
+          <div class="tt-col">
+            <div><p class="subh">Génova · grátil</p><div class="tt-grid g" id="tt-g"></div></div>
+            <div><p class="subh">Mayor · baluma</p><div class="tt-grid m" id="tt-m"></div></div>
+            <button type="button" class="linkbtn" id="tt-reset">Restablecer</button>
+          </div>
+          <div class="tt-out" id="tt-out" aria-live="polite"></div>
+        </div>
+      </section>
+    </div>
+  </div>
+  </div>
+
+  <div class="view" id="v-problema" hidden>
+  <div class="grid">
+    <div class="col">
+      <section class="panel" aria-labelledby="h-ctx">
+        <div class="panel-h"><h2 id="h-ctx">Situación</h2><span class="meta" id="ctx-boat"></span></div>
+        <div class="slider">
+          <label for="tws2">Viento real</label>
+          <input type="range" id="tws2" min="0" max="40" step="1" value="15">
+          <output id="o-tws2">15 kn</output>
+        </div>
+        <div class="cfg-group">
+          <h3>Rumbo</h3>
+          <div class="toggles" id="rumbos"></div>
+        </div>
+        <p class="hint" id="ctx-now"></p>
+      </section>
+    </div>
+    <div class="col">
+      <section class="panel" aria-labelledby="h-prob">
+        <div class="panel-h"><h2 id="h-prob">¿Qué te pasa?</h2></div>
+        <form class="ask" id="ask">
+          <div class="ask-row">
+            <input id="q" type="text" autocomplete="off" aria-label="Describe la situación" placeholder="Escríbelo como lo dirías a bordo" value="Con viento de 15 nudos me voy de orzada y estoy sufriendo">
+            <button class="btn" type="submit">Analizar</button>
+          </div>
+          <div class="examples">Por ejemplo:
+            <button type="button" class="ex">Ciñendo con 6 nudos el barco no anda</button>
+            <button type="button" class="ex">A un largo con 22 nudos voy muy escorado</button>
+            <button type="button" class="ex">En popa con 20 nudos, mucho balanceo</button>
+          </div>
+        </form>
+        <div class="understood" id="understood" aria-live="polite"></div>
+        <div class="chips" id="chips" role="group" aria-label="O elige el problema"></div>
+
+        <div class="cl-head"><h3 id="cl-title">Checklist</h3><span class="progress" id="cl-prog"></span></div>
+        <p class="why" id="cl-why"></p>
+        <ol class="checklist" id="checklist"></ol>
+        <p class="omitted" id="omitted"></p>
+        <details class="proc" id="proc">
+          <summary>Cómo tomar un rizo (rizo de botavara)</summary>
+          <ol>
+            <li>Avisa a la tripulación. Con mar, chalecos y arnés enganchado antes de salir de la bañera.</li>
+            <li>Ponte a rumbo de ceñida o descuartelar con el génova trabajando, o al pairo, para descargar la mayor.</li>
+            <li>Larga la contra y tensa el amantillo para que la botavara no caiga (si tienes contra rígida, sujeta ella).</li>
+            <li>Larga escota de mayor hasta que la vela flamee y no tire.</li>
+            <li>Larga la driza hasta la marca del rizo.</li>
+            <li>Engancha el ollao de amura en la garra, o caza el cabo de amura del rizo.</li>
+            <li>Vuelve a tensar la driza hasta que el grátil quede sin arrugas.</li>
+            <li>Caza el cabo de rizo de la baluma hasta que el ollao baje a la botavara.</li>
+            <li>Larga el amantillo, caza escota y contra y vuelve al rumbo.</li>
+            <li>Si quieres, recoge el paño sobrante con los matafiones alrededor de la vela, nunca alrededor de la botavara.</li>
+          </ol>
+          <p class="hint" style="margin-top:8px">Con rizo de un solo cabo, los pasos 6 y 8 se hacen a la vez desde la bañera.</p>
+        </details>
+      </section>
+    </div>
+  </div>
+  </div>
+
+  <div class="view" id="v-barcos" hidden>
+  <div class="grid">
+    <div class="col">
+      <section class="panel" aria-labelledby="h-boats">
+        <div class="panel-h"><h2 id="h-boats">Tus barcos</h2><button type="button" class="linkbtn" id="new-boat">+ Nuevo barco</button></div>
+        <p class="hint" id="store-note"></p>
+        <ul class="boats" id="boat-list"></ul>
+      </section>
+    </div>
+    <div class="col">
+      <section class="panel" aria-labelledby="h-barco">
+        <div class="panel-h"><h2 id="h-barco">Ficha del barco</h2><span class="meta" id="save-state"></span></div>
+
+        <div class="cfg-group">
+          <div class="row" style="justify-content:space-between"><h3>Medidas</h3>
+            <div class="seg" id="unit" role="group" aria-label="Unidades">
+              <button type="button" data-v="m">Metros</button><button type="button" data-v="ft">Pies</button>
+            </div></div>
+          <div class="ficha">
+            <div class="field full"><label for="b-name">Modelo</label><input id="b-name" type="text" placeholder="Ej. Oceanis 38.1"></div>
+            <div class="field"><label for="b-loa" data-i>Eslora (<span class="u-lbl">m</span>)</label><input id="b-loa" type="number" step="0.1" min="1" max="100" inputmode="decimal"></div>
+            <div class="field"><label for="b-beam" data-i>Manga (<span class="u-lbl">m</span>)</label><input id="b-beam" type="number" step="0.1" min="1" max="30" inputmode="decimal"></div>
+          </div>
+          <p class="warn" id="b-warn" hidden></p>
+        </div>
+
+        <div class="cfg-group">
+          <h3>Aparejo</h3>
+          <div class="seg" id="rig" role="group" aria-label="Tipo de aparejo">
+            <button type="button" data-v="fraccionado">Fraccionado</button>
+            <button type="button" data-v="tope">A tope de palo</button>
+          </div>
+          <p class="hint">Mira desde proa: si el estay de proa llega al tope del mástil, es a tope de palo. Si queda mástil por encima, es fraccionado.</p>
+        </div>
+
+        <div class="cfg-group">
+          <h3>Mayor</h3>
+          <div class="toggles" id="tg-mayor"></div>
+          <div class="row"><span class="hint" style="font-weight:600;color:var(--ink)">Rizos</span>
+            <div class="seg" id="rizos" role="group" aria-label="Número de rizos">
+              <button type="button" data-v="0">0</button><button type="button" data-v="1">1</button><button type="button" data-v="2">2</button><button type="button" data-v="3">3</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="cfg-group">
+          <h3>Génova</h3>
+          <div class="toggles" id="tg-genova"></div>
+        </div>
+
+        <div class="save-row">
+          <button type="button" class="btn" id="save-boat">Guardar barco</button>
+          <button type="button" class="btn ghost" id="save-new">Guardar como nuevo</button>
+        </div>
+        <p class="legend" data-i><b>Grátil</b> = cunningham / driza · <b>Pujamen</b> = cabo de pujamen · <b>Baluma</b> = escota, carro, contra y escotero · <b>Bolsa</b> = tensor del estay de popa, si lo tienes, + todo lo anterior</p>
+      </section>
+    </div>
+  </div>
+  </div>
+
+  <footer>
+    <p>Prototipo. Las polares son estimaciones y los umbrales de rizo, orientativos: si estás pensando en rizar, riza.</p>
+  </footer>
+</div>
+
