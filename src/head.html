@@ -9,6 +9,7 @@
   --bg:#F3F5F4; --surface:#FFFFFF; --ink:#0F2230; --muted:#5A6B72; --line:#D6DEE0; --line-strong:#A9B8BD;
   --sea:#1F5F7F; --sea-soft:#E2ECF0; --accent:#A8195C; --accent-soft:#F6E2EB;
   --port:#C0302B; --stbd:#17804B; --warn:#9C640F;
+  --il-sky:#EAF2F5; --il-sea:#BFD9E4; --il-sea2:#9CC4D6; --il-hull:#FFFFFF; --il-stripe:#1F3B57; --il-sail:#FBFBF8; --il-seam:#D9DED8; --il-rope:#E0662B; --il-deck:#C9B48E; --il-good:#17804B; --il-bad:#C8364A;
   --inst-bg:#0D161B; --inst-face:#121D23; --inst-ink:#E4ECEE; --inst-muted:#8C9CA2; --inst-line:#26363F; --inst-accent:#F2578F; --inst-sea:#7DB4CF; --inst-sea-soft:#192A33;
   --f-display:"IBM Plex Sans Condensed","Arial Narrow",system-ui,sans-serif;
   --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
@@ -18,11 +19,13 @@
   --bg:#080C0F; --surface:#0F171C; --ink:#D3DCDF; --muted:#7E8D93; --line:#1D2930; --line-strong:#33444D;
   --sea:#6AA3BF; --sea-soft:#12222A; --accent:#FF5A4E; --accent-soft:#361412;
   --port:#EE625A; --stbd:#3CBD7C; --warn:#DDA247;
+  --il-sky:#0F1A20; --il-sea:#16303C; --il-sea2:#1C3D4C; --il-hull:#D9E1E3; --il-stripe:#6AA3BF; --il-sail:#E9EDEA; --il-seam:#BFC7C3; --il-rope:#F08A4B; --il-deck:#8C7B5C; --il-good:#3CBD7C; --il-bad:#FF6B5E;
   --inst-bg:#0B1115; --inst-face:#0F171C; --inst-ink:#D3DCDF; --inst-muted:#7E8D93; --inst-line:#22313A; --inst-accent:#FF5A4E; --inst-sea:#6AA3BF; --inst-sea-soft:#14242C; color-scheme:dark}}
 :root[data-theme="dark"]:not([data-mode="light"]),:root[data-mode="dark"]{
   --bg:#080C0F; --surface:#0F171C; --ink:#D3DCDF; --muted:#7E8D93; --line:#1D2930; --line-strong:#33444D;
   --sea:#6AA3BF; --sea-soft:#12222A; --accent:#FF5A4E; --accent-soft:#361412;
   --port:#EE625A; --stbd:#3CBD7C; --warn:#DDA247;
+  --il-sky:#0F1A20; --il-sea:#16303C; --il-sea2:#1C3D4C; --il-hull:#D9E1E3; --il-stripe:#6AA3BF; --il-sail:#E9EDEA; --il-seam:#BFC7C3; --il-rope:#F08A4B; --il-deck:#8C7B5C; --il-good:#3CBD7C; --il-bad:#FF6B5E;
   --inst-bg:#0B1115; --inst-face:#0F171C; --inst-ink:#D3DCDF; --inst-muted:#7E8D93; --inst-line:#22313A; --inst-accent:#FF5A4E; --inst-sea:#6AA3BF; --inst-sea-soft:#14242C; color-scheme:dark}
 :root[data-mode="light"]{color-scheme:light}
 
@@ -275,6 +278,37 @@ body.how-open{overflow:hidden}
 .how-cap{margin:0;font-size:14.5px;min-height:3em}
 .how-steps{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14px}
 .how-note{margin:0;font-size:13px;color:var(--warn)}
+.how-strip{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.how-strip li{border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--surface);display:flex;flex-direction:column;transition:border-color .3s,box-shadow .3s}
+.how-strip li.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.how-strip svg{display:block;width:100%;height:auto}
+.how-strip p{margin:0;padding:7px 9px 9px;font-size:13px;line-height:1.35}
+.how-strip p b{font:500 12px var(--f-mono);color:var(--accent);margin-right:5px}
+.how-fx{display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:13px}
+.how-fx div{border-top:2px solid var(--line-strong);padding-top:6px}
+.how-fx h3{font:600 14px/1.2 var(--f-display);margin:0 0 3px}
+.how-fx p{margin:0;color:var(--muted)}
+@media (max-width:420px){.how-strip p{font-size:12.5px}}
+.il-sky{fill:var(--il-sky)} .il-sea{fill:var(--il-sea)} .il-sea2{fill:var(--il-sea2)}
+.il-hull{fill:var(--il-hull);stroke:var(--il-stripe);stroke-width:1.5} .il-stripe{fill:var(--il-stripe)} .il-deck{fill:var(--il-deck)}
+.il-sail{fill:var(--il-sail);stroke:var(--il-stripe);stroke-width:1.6;stroke-linejoin:round}
+.il-seam{fill:none;stroke:var(--il-seam);stroke-width:1.2}
+.il-mast{stroke:var(--il-stripe);stroke-width:5;stroke-linecap:round}
+.il-stay{stroke:var(--il-stripe);stroke-width:1.2;opacity:.6}
+.il-rope{fill:none;stroke:var(--il-rope);stroke-width:4;stroke-linecap:round}
+.il-car{fill:var(--il-stripe)}
+.il-track{stroke:#7E8B90;stroke-width:5;stroke-linecap:round}
+.il-big{fill:var(--il-rope)}
+.il-tt-ok{fill:none;stroke:var(--il-good);stroke-width:3;stroke-linecap:round}
+.il-tt-bad{fill:none;stroke:var(--il-bad);stroke-width:3;stroke-linecap:round}
+.il-pin{fill:var(--il-stripe)}
+.il-halo{fill:none;stroke:var(--il-rope);stroke-width:2.5;stroke-dasharray:5 4}
+.il-pill{fill:var(--surface);stroke:var(--line-strong)}
+.il-pt{fill:var(--ink);font:600 16px var(--f-body)}
+.il-lead{stroke:var(--muted);stroke-width:1.4}
+.il-check{fill:none;stroke:var(--il-good);stroke-width:6;stroke-linecap:round;stroke-linejoin:round}
+@media (prefers-reduced-motion:reduce){.how-strip li{transition:none}}
+
 .hw-hull{fill:var(--sea-soft);stroke:var(--ink);stroke-width:1.2}
 .hw-mast{stroke:var(--ink);stroke-width:3;stroke-linecap:round}
 .hw-stay{stroke:var(--muted);stroke-width:1}
@@ -547,13 +581,8 @@ footer{max-width:none}
   <div class="how" id="how" hidden role="dialog" aria-modal="true" aria-labelledby="how-title">
     <div class="how-card">
       <div class="how-head"><h2 id="how-title"></h2><button type="button" class="how-x" id="how-close" aria-label="Cerrar"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 3.5l9 9M12.5 3.5l-9 9"/></svg></button></div>
-      <svg id="how-svg" viewBox="0 0 360 240" role="img" aria-label="Esquema"></svg>
-      <div class="how-ctl">
-        <div class="seg small"><button type="button" id="how-a"></button><button type="button" id="how-b"></button></div>
-        <button type="button" class="how-play" id="how-play"><svg viewBox="0 0 16 16" aria-hidden="true"><path class="i-play" d="M5 3.5 12 8l-7 4.5z"/><path class="i-pause" d="M5 3.5v9M11 3.5v9"/></svg></button>
-      </div>
-      <p class="how-cap" id="how-cap" aria-live="polite"></p>
-      <ol class="how-steps" id="how-steps"></ol>
+      <ol class="how-strip" id="how-strip"></ol>
+      <div class="how-fx" id="how-fx"></div>
       <p class="how-note" id="how-note"></p>
     </div>
   </div>

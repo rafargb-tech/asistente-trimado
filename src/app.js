@@ -627,84 +627,76 @@ const ease=x=>x<.5?2*x*x:1-Math.pow(-2*x+2,2)/2;
 const HOW={
   escotero:{
     title:'Mover el escotero del génova',
-    states:['Adelante','Atrás'],
-    cap:p=>p<.5?'Adelante: la escota tira más hacia abajo. Baluma cerrada y más bolsa abajo. Para poco viento o con mar.':'Atrás: la escota tira más hacia atrás. Pujamen plano y la parte alta abierta, que descarga arriba. Para viento fuerte.',
-    steps:['Orza despacio mirando las lanitas de barlovento del génova.','Si la alta rompe antes que la baja, el escotero va adelante. Si la baja rompe antes, va atrás.',
-      'Larga un poco de escota para quitar carga, mueve el carro uno o dos agujeros (o con su cabo de control) y vuelve a cazar.','Repite hasta que las tres lanitas rompan a la vez.'],
-    note:'No muevas el carro con la escota cargada: el pasador se atasca y te puedes pillar los dedos.',
-    draw(svg,p){
-      svg.innerHTML='';
-      const g=(tag,at,txt)=>{const e=mk(tag,at,svg);if(txt!=null)e.textContent=txt;return e;};
-      // casco y cubierta (vista lateral, proa a la derecha)
-      g('path',{d:'M16 204 Q180 212 344 196 L332 220 Q180 230 30 222 Z',class:'hw-hull'});
-      g('line',{x1:92,y1:206,x2:92,y2:18,class:'hw-mast'});
-      g('line',{x1:94,y1:22,x2:338,y2:197,class:'hw-stay'});
-      // vela (génova sin solape para que se lea claro)
-      const T=[322,186], H=[112,36], C=[132-6*p,176+3*p];
-      const lm=[(H[0]+C[0])/2,(H[1]+C[1])/2], lk=-5+11*p;     // baluma: recta/cerrada -> abierta
-      const lc=[lm[0]-lk,lm[1]];
-      const fm=[(T[0]+C[0])/2,(T[1]+C[1])/2], fd=14-10*p;      // pujamen: con bolsa -> plano
-      g('path',{d:`M${T} L${H} Q${lc} ${C} Q${fm[0]},${fm[1]+fd} ${T} Z`,class:'hw-sail'});
-      g('path',{d:`M${H} Q${lc} ${C}`,class:'hw-leech'});
-      g('path',{d:`M${C} Q${fm[0]},${fm[1]+fd} ${T}`,class:'hw-foot'});
-      // carril, carro y escota
-      const tx0=108,tx1=168,ty=203, cx=168-(168-108)*p;
-      g('line',{x1:tx0,y1:ty,x2:tx1,y2:ty,class:'hw-track'});
-      for(let x=tx0;x<=tx1;x+=10) g('circle',{cx:x,cy:ty,r:1.4,class:'hw-hole'});
-      g('line',{x1:C[0],y1:C[1],x2:cx,y2:ty-4,class:'hw-sheet'});
-      g('rect',{x:cx-8,y:ty-6,width:16,height:8,rx:2,class:'hw-car'});
-      g('circle',{cx:C[0],cy:C[1],r:3.2,class:'hw-clew'});
-      // etiquetas
-      g('text',{x:(tx0+tx1)/2,y:ty+16,class:'hw-lbl','text-anchor':'middle'},t('Escotero'));
-      g('text',{x:C[0]+8,y:C[1]-8,class:'hw-lbl'},t('Puño'));
-      g('text',{x:lc[0]+lk*.5+8,y:lm[1]-30,class:'hw-lbl'},t('Baluma'));
-      g('text',{x:fm[0]+24,y:fm[1]+fd-12,class:'hw-lbl','text-anchor':'middle'},t('Pujamen'));
-      // recuadro: secciones vistas desde arriba
-      const bx=214,by=10,bw=136,bh=104;
-      g('rect',{x:bx,y:by,width:bw,height:bh,rx:4,class:'hw-box'});
-      g('text',{x:bx+8,y:by+15,class:'hw-lbl'},t('Desde arriba'));
-      g('text',{x:bx+8,y:by+28,class:'hw-lbl small'},t('Giro alto-bajo (exagerado)'));
-      const L=[bx+12,by+48], len=82, tw=3+16*p;
-      g('line',{x1:L[0]-4,y1:L[1],x2:bx+bw-6,y2:L[1],class:'hw-axis'});
-      [[0,'hw-sec low',t('baja')],[tw/2,'hw-sec mid',''],[tw,'hw-sec top',t('alta')]].forEach(([ang,cls,lab],k)=>{
-        const a0=(6+ang)*D2R, ex=L[0]+len*Math.cos(a0), ey=L[1]+len*Math.sin(a0);
-        const mxp=(L[0]+ex)/2-9*Math.sin(a0), myp=(L[1]+ey)/2+9*Math.cos(a0);
-        g('path',{d:`M${L} Q${mxp},${myp} ${ex},${ey}`,class:cls});
-        if(lab) g('text',{x:ex+4,y:ey+(k===0?-2:9),class:'hw-lbl small'},lab);
-      });
-    }
+    steps:[
+      {t:'Orza despacio y mira qué lanita de barlovento rompe primero.',s:{p:.6,tt:['ok','ok','bad'],pill:['Lanitas','tt'],halo:'tt'}},
+      {t:'Larga un poco de escota para quitar carga del carro.',s:{p:.6,slack:true,pill:['Escota','sheet'],halo:'sheet'}},
+      {t:'Mueve el carro: adelante si rompe antes la alta, atrás si rompe antes la baja.',s:{p:.2,from:.6,arrow:1,pill:['Escotero','car'],halo:'car'}},
+      {t:'Caza y comprueba: las tres lanitas rompen a la vez.',s:{p:.2,tt:['ok','ok','ok'],check:true}}
+    ],
+    fx:[['Adelante','Tira hacia abajo. Baluma cerrada y más bolsa abajo. Para poco viento o con mar.'],
+        ['Atrás','Tira hacia atrás. Pujamen plano y la parte alta abierta, que descarga. Para viento fuerte.']],
+    note:'No muevas el carro con la escota cargada: el pasador se atasca y te puedes pillar los dedos.'
   }
 };
+/* Ilustración común: génova de lado, proa a la derecha */
+function ilGeo(p){
+  const T=[322,186],H=[112,36],C=[132-6*p,176+3*p];
+  const lm=[(H[0]+C[0])/2,(H[1]+C[1])/2], lk=-5+11*p, lc=[lm[0]-lk,lm[1]];
+  const fm=[(T[0]+C[0])/2,(T[1]+C[1])/2], fd=14-10*p;
+  return {T,H,C,lm,lc,fm,fd,tx0:106,tx1:170,ty:197,cx:170-64*p};
+}
+function drawIl(svg,s){
+  svg.innerHTML=''; const g=ilGeo(s.p); const m=(tag,at,txt)=>{const e=mk(tag,at,svg);if(txt!=null)e.textContent=txt;return e;};
+  m('rect',{x:0,y:0,width:360,height:240,class:'il-sky'});
+  m('path',{d:'M0 214 Q45 206 90 214 T180 214 T270 214 T360 214 V240 H0 Z',class:'il-sea'});
+  m('path',{d:'M0 226 Q45 220 90 226 T180 226 T270 226 T360 226 V240 H0 Z',class:'il-sea2'});
+  m('path',{d:'M14 198 Q180 206 346 190 L334 216 Q180 226 30 218 Z',class:'il-hull'});
+  m('path',{d:'M24 210 Q180 218 338 204 L336 208 Q180 222 26 214 Z',class:'il-stripe'});
+  m('path',{d:'M20 198 Q180 206 344 190 L344 193 Q180 209 20 201 Z',class:'il-deck'});
+  m('line',{x1:92,y1:200,x2:92,y2:14,class:'il-mast'});
+  m('line',{x1:94,y1:18,x2:340,y2:191,class:'il-stay'});
+  m('path',{d:`M${g.T} L${g.H} Q${g.lc} ${g.C} Q${g.fm[0]},${g.fm[1]+g.fd} ${g.T} Z`,class:'il-sail'});
+  [.3,.55,.78].forEach(f=>{const a=[g.C[0]+(g.H[0]-g.C[0])*f,g.C[1]+(g.H[1]-g.C[1])*f],b=[g.T[0]+(g.H[0]-g.T[0])*f,g.T[1]+(g.H[1]-g.T[1])*f];
+    m('path',{d:`M${a} Q${(a[0]+b[0])/2},${(a[1]+b[1])/2+6} ${b}`,class:'il-seam'});});
+  const tts=s.tt||['ok','ok','ok'], ttp=[];
+  [.28,.5,.72].forEach((f,i)=>{const x=g.T[0]+(g.H[0]-g.T[0])*f-10,y=g.T[1]+(g.H[1]-g.T[1])*f+3,bad=tts[i]==='bad';ttp.push([x,y]);
+    m('circle',{cx:x,cy:y,r:2,class:'il-pin'});
+    m('path',{d:bad?`M${x},${y} c-4,-8 -9,5 -13,-4 s-6,-7 -10,1`:`M${x},${y} l-24,0`,class:bad?'il-tt-bad':'il-tt-ok'});});
+  m('line',{x1:g.tx0,y1:g.ty,x2:g.tx1,y2:g.ty,class:'il-track'});
+  const cy=g.ty-5;
+  m('path',{d:s.slack?`M${g.C} Q${(g.C[0]+g.cx)/2+10},${cy+16} ${g.cx},${cy}`:`M${g.C} L${g.cx},${cy}`,class:'il-rope'});
+  if(s.from!=null){const fx=170-64*s.from; m('rect',{x:fx-10,y:cy-6,width:20,height:11,rx:3,class:'il-car',opacity:.25});}
+  m('rect',{x:g.cx-10,y:cy-6,width:20,height:11,rx:3,class:'il-car'});
+  m('circle',{cx:g.C[0],cy:g.C[1],r:4.5,class:'il-car'});
+  if(s.arrow){const ax=(g.tx0+g.tx1)/2, ay=g.ty+26, d=s.arrow;
+    m('path',{d:`M${ax-d*28},${ay} L${ax+d*14},${ay} L${ax+d*14},${ay-8} L${ax+d*30},${ay+3} L${ax+d*14},${ay+14} L${ax+d*14},${ay+6} L${ax-d*28},${ay+6} Z`,class:'il-big'});}
+  const target={tt:ttp[2],sheet:[(g.C[0]+g.cx)/2+(s.slack?6:0),(g.C[1]+cy)/2+(s.slack?8:0)],car:[g.cx,cy]};
+  if(s.halo) m('circle',{cx:target[s.halo][0]-(s.halo==='tt'?10:0),cy:target[s.halo][1],r:s.halo==='tt'?20:18,class:'il-halo'});
+  if(s.pill){const [txt,k]=s.pill, tg=target[k], label=t(txt), w=label.length*8.6+20, px=k==='tt'?250:56, py=k==='tt'?40:120;
+    m('line',{x1:tg[0]-(k==='tt'?10:0),y1:tg[1],x2:px,y2:py,class:'il-lead'});
+    m('rect',{x:px-w/2,y:py-14,width:w,height:28,rx:14,class:'il-pill'}); m('text',{x:px,y:py+6,'text-anchor':'middle',class:'il-pt'},label);}
+  if(s.check) m('path',{d:'M262 48 l14 14 l28 -30',class:'il-check'});
+}
 let howState=null;
 function openHow(k){
   const H=HOW[k]; if(!H) return;
-  const box=$('how'); box.hidden=false; document.body.classList.add('how-open');
+  $('how').hidden=false; document.body.classList.add('how-open');
   $('how-title').textContent=t(H.title);
-  $('how-steps').innerHTML=H.steps.map(s=>`<li>${t(s)}</li>`).join('');
+  const ol=$('how-strip'); ol.innerHTML='';
+  H.steps.forEach((st,i)=>{const li=document.createElement('li');li.innerHTML=`<svg viewBox="0 0 360 240" role="img" aria-hidden="true"></svg><p><b>${i+1}</b>${t(st.t)}</p>`;ol.appendChild(li);drawIl(li.querySelector('svg'),st.s);});
+  $('how-fx').innerHTML=H.fx.map(([h,d])=>`<div><h3>${t(h)}</h3><p>${t(d)}</p></div>`).join('');
   $('how-note').textContent=t(H.note);
-  $('how-a').textContent=t(H.states[0]); $('how-b').textContent=t(H.states[1]);
   const reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
-  howState={k,p:0,target:null,play:!reduce,t0:performance.now(),raf:0,opener:document.activeElement};
-  howFrame(); $('how-close').focus();
+  howState={k,i:0,timer:0,opener:document.activeElement};
+  const lis=[...ol.children]; const hi=()=>lis.forEach((li,n)=>li.classList.toggle('on',n===howState.i));
+  hi(); if(!reduce) howState.timer=setInterval(()=>{howState.i=(howState.i+1)%lis.length;hi();},2200);
+  lis.forEach((li,n)=>li.addEventListener('click',()=>{clearInterval(howState.timer);howState.i=n;hi();}));
+  $('how-close').focus();
 }
-function howSet(p){const s=howState;if(!s)return;s.p=p;const H=HOW[s.k];H.draw($('how-svg'),s.p);$('how-cap').textContent=t(H.cap(s.p));
-  $('how-a').setAttribute('aria-pressed',s.p<.5?'true':'false');$('how-b').setAttribute('aria-pressed',s.p>=.5?'true':'false');
-  $('how-play').setAttribute('aria-pressed',s.play?'true':'false');$('how-play').setAttribute('aria-label',t(s.play?'Pausa':'Reproducir'));}
-function howFrame(now){
-  const s=howState; if(!s) return;
-  if(s.play){const per=5200,x=((now||performance.now())-s.t0)%per/per; // 0..1: ida, pausa, vuelta, pausa
-    const ph=x<.3?ease(x/.3):x<.5?1:x<.8?1-ease((x-.5)/.3):0; howSet(ph);}
-  else if(s.target!=null){const d=s.target-s.p; if(Math.abs(d)<.01){howSet(s.target);s.target=null;} else howSet(s.p+d*.14);}
-  else howSet(s.p);
-  if(s.play||s.target!=null) s.raf=requestAnimationFrame(howFrame);
-}
-function closeHow(){const s=howState; if(s){cancelAnimationFrame(s.raf);} $('how').hidden=true; document.body.classList.remove('how-open'); const o=s&&s.opener; howState=null; if(o&&o.focus) o.focus();}
+function closeHow(){const s=howState; if(s) clearInterval(s.timer); $('how').hidden=true; document.body.classList.remove('how-open'); const o=s&&s.opener; howState=null; if(o&&o.focus) o.focus();}
 $('how-close').onclick=closeHow;
 $('how').addEventListener('click',e=>{if(e.target===$('how'))closeHow();});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&howState)closeHow();});
-$('how-a').onclick=()=>{const s=howState;cancelAnimationFrame(s.raf);s.play=false;s.target=0;howFrame();};
-$('how-b').onclick=()=>{const s=howState;cancelAnimationFrame(s.raf);s.play=false;s.target=1;howFrame();};
-$('how-play').onclick=()=>{const s=howState;cancelAnimationFrame(s.raf);s.play=!s.play;s.target=null;s.t0=performance.now()-(s.p>=.5?5200*.3:0);howFrame();};
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('.howbtn'); if(b){e.preventDefault();openHow(b.dataset.how);}});
 
 /* ---------- Render ---------- */
