@@ -255,11 +255,24 @@ footer p{margin:0}
 .d-arrowhead{fill:var(--accent)}
 @media (prefers-reduced-motion:reduce){body{transition:none}}
 /* Cómo se hace */
+.howbtn.icon{width:34px;height:34px;padding:0;margin:-6px -6px 0 0;display:grid;place-items:center;border-radius:50%;flex:none}
+.howbtn.icon svg{width:19px;height:19px}
+.howbtn.icon:hover{background:var(--sea-soft);text-decoration:none}
+.sail li{grid-template-columns:104px minmax(0,1fr) 28px}
+.st-t{flex-wrap:nowrap}
+.st-t label{flex:1 1 auto;min-width:0}
+.reefbox{flex-wrap:nowrap;align-items:flex-start}
+.reefbox span{flex:1 1 auto}
+.howkey{display:inline-flex;align-items:center;gap:5px;color:var(--muted);font:400 12.5px var(--f-body)}
+.howkey svg{width:14px;height:14px;fill:none;stroke:var(--sea);stroke-width:1.4}
+.howkey svg path{fill:var(--sea)}
+.progress{display:inline-flex;gap:14px;align-items:center}
+
 .how[hidden]{display:none}
 .howbtn{appearance:none;border:0;background:none;padding:6px 0 0;margin:0;display:inline-flex;align-items:center;gap:6px;color:var(--sea);font:500 13px/1.2 var(--f-body);cursor:pointer}
 .howbtn svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.4}
 .howbtn:hover{text-decoration:underline;text-underline-offset:3px}
-.val .howbtn{display:flex}
+
 body.how-open{overflow:hidden}
 .how{position:fixed;inset:0;z-index:50;background:rgba(6,12,16,.55);display:flex;align-items:flex-end;justify-content:center;padding:max(12px,env(safe-area-inset-top,0px)) max(0px,env(safe-area-inset-right,0px)) 0 max(0px,env(safe-area-inset-left,0px))}
 @media (min-width:640px){.how{align-items:center;padding:24px}}
@@ -391,7 +404,7 @@ footer{max-width:none}
   <header class="appbar">
     <div class="brand">
       <svg class="mark" viewBox="0 0 34 34" aria-hidden="true"><path class="m3" d="M3 28.5c4 0 4-2 8-2s4 2 8 2 4-2 8-2 4 2 4 2"/><path class="m1" d="M16 3v21H6.5z"/><path class="m2" d="M18 6l9.5 18H18z"/></svg>
-      <div><h1>Asistente de Trimado</h1><span class="ver">Prototipo v3.5</span></div>
+      <div><h1>Asistente de Trimado</h1><span class="ver">Prototipo v3.6</span></div>
     </div>
     <div class="prefs">
       <div class="seg small langs" id="langs" role="group" aria-label="Idioma"><button type="button" data-v="es" lang="es">ES</button><button type="button" data-v="en" lang="en">EN</button><button type="button" data-v="fr" lang="fr">FR</button></div>

@@ -3,7 +3,9 @@
    Cada tema: 3-4 viñetas {t: texto, s: estado de escena}, fx opcional (dos columnas), note opcional.
    Textos: cadena (se traduce con t()) u objeto {es,en,fr}. */
 const L=x=>x==null?'':(typeof x==='string'?t(x):(x[S.lang]||x.es));
-function howBtn(k){return `<button type="button" class="howbtn" data-how="${k}"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5"/><path d="M6.6 5.6 10.6 8l-4 2.4z" fill="currentColor" stroke="none"/></svg>${t('Cómo se hace')}</button>`;}
+const HOW_ICON='<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5"/><path d="M6.6 5.6 10.6 8l-4 2.4z" fill="currentColor" stroke="none"/></svg>';
+function howBtn(k,full){const ttl=t('Cómo se hace'); return full?`<button type="button" class="howbtn" data-how="${k}">${HOW_ICON}${ttl}</button>`:`<button type="button" class="howbtn icon" data-how="${k}" aria-label="${ttl}" title="${ttl}">${HOW_ICON}</button>`;}
+function howKey(){return `<span class="howkey">${HOW_ICON}${t('Cómo se hace')}</span>`;}
 
 /* ---------- utilidades de dibujo ---------- */
 function M_(svg){return (tag,at,txt)=>{const e=mk(tag,at,svg);if(txt!=null)e.textContent=txt;return e;};}

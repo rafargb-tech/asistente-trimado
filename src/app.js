@@ -286,7 +286,7 @@ function renderChecklist(){
     if(i===firstReef&&i>0){const sep=document.createElement('li');sep.className='cl-sep';sep.textContent=t('Si no basta, reduce vela');ol.appendChild(sep);}
     const id=p+'-'+i, st=statusOf(s,i,list,p), li=document.createElement('li');
     if(s.reef) li.classList.add('reef'); if(S.done[id]) li.classList.add('done');
-    li.innerHTML=`<input type="checkbox" id="ck-${id}" ${S.done[id]?'checked':''} aria-label="${t('Hecho')}"><div><div class="st-t"><label for="ck-${id}"><span class="kind">${t(s.kind)}</span>${s.t}</label></div><div class="st-d">${s.d}</div>${s.how?howBtn(s.how):''}</div>${st.t?`<span class="stat ${st.c}">${st.t}</span>`:'<span></span>'}`;
+    li.innerHTML=`<input type="checkbox" id="ck-${id}" ${S.done[id]?'checked':''} aria-label="${t('Hecho')}"><div><div class="st-t"><label for="ck-${id}"><span class="kind">${t(s.kind)}</span>${s.t}</label>${s.how?howBtn(s.how):''}</div><div class="st-d">${s.d}</div></div>${st.t?`<span class="stat ${st.c}">${st.t}</span>`:'<span></span>'}`;
     li.querySelector('input').onchange=e=>{S.done[id]=e.target.checked;li.classList.toggle('done',e.target.checked);prog(list,p);};
     ol.appendChild(li);
   });
@@ -295,7 +295,7 @@ function renderChecklist(){
   $('omitted').textContent=om.length?t(om.length>1?'{n} pasos omitidos porque tu barco no tiene: {r}.':'{n} paso omitido porque tu barco no tiene: {r}.',{n:om.length,r:reqs.join(', ')}):'';
   $('proc').hidden=!OVER.includes(p)||S.cfg.rizos===0;
 }
-function prog(list,p){const n=list.filter((s,i)=>S.done[p+'-'+i]).length;$('cl-prog').textContent=t('{n}/{m} hechos',{n,m:list.length});}
+function prog(list,p){const n=list.filter((s,i)=>S.done[p+'-'+i]).length;$('cl-prog').innerHTML=howKey()+'<span>'+t('{n}/{m} hechos',{n,m:list.length})+'</span>';}
 
 /* ---------- Parser (ES / EN / FR) ---------- */
 function norm(s){return s.toLowerCase().replace(/œ/g,'oe').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[’']/g,"'");}
@@ -579,7 +579,7 @@ function diagnoseTT(){
   else if(h.bot&&!h.top) ms.push(t('<b>Parte baja ahogada.</b>')+' '+t(c.pujamen?'Caza el pujamen para aplanar abajo.':'Larga un pelo de escota.'));
   else ms.push(t('<b>Revisa la escota de mayor:</b> larga un pelo y mira si salen.'));
   const Lh=a=>a.map(x=>`<li>${x}</li>`).join('');
-  return `<p class="subh">${t('Qué hacer')}</p><div><p class="tt-h" style="margin:0 0 4px">${t('Génova')}</p><ol>${Lh(gs)}</ol></div><div><p class="tt-h" style="margin:0 0 4px">${t('Mayor')}</p><ol>${Lh(ms)}</ol></div><div>${howBtn('escota_genova')}</div>`;
+  return `<p class="subh">${t('Qué hacer')}</p><div><p class="tt-h" style="margin:0 0 4px">${t('Génova')}</p><ol>${Lh(gs)}</ol></div><div><p class="tt-h" style="margin:0 0 4px">${t('Mayor')}</p><ol>${Lh(ms)}</ol></div><div>${howBtn('escota_genova',true)}</div>`;
 }
 
 /* ---------- Textos estáticos ---------- */
@@ -644,7 +644,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&howState)closeHow()
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('.howbtn'); if(b){e.preventDefault();openHow(b.dataset.how);}});
 
 /* ---------- Render ---------- */
-function li(r){return `<li><span class="ctl">${r.c}${r.p?`<span class="part">${r.p}</span>`:''}</span><span class="val">${r.v}${r.alt?`<span class="alt">${r.alt}</span>`:''}${r.how?howBtn(r.how):''}</span></li>`;}
+function li(r){return `<li><span class="ctl">${r.c}${r.p?`<span class="part">${r.p}</span>`:''}</span><span class="val">${r.v}${r.alt?`<span class="alt">${r.alt}</span>`:''}</span>${r.how?howBtn(r.how):'<span></span>'}</li>`;}
 function render(){
   const z=zone(S.awa);
   $('awa').value=S.awa; $('o-awa').textContent=S.awa+'°'; $('tws').value=S.tws; $('o-tws').textContent=S.tws+' kn';
@@ -652,8 +652,8 @@ function render(){
   const am=$('r-amura'); am.className='amura '+S.side; am.textContent=t(S.side==='estribor'?'Amura de estribor':'Amura de babor');
   drawDial();
   const tr=trim(); $('t-mayor').innerHTML=tr.M.map(li).join(''); $('t-genova').innerHTML=tr.G.map(li).join('');
-  $('trim-ctx').textContent='';
-  const ra=reefAdvice(); $('reefbox').innerHTML=`<strong>${ra.h}</strong><span>${ra.d}${S.cfg.rizos>0?howBtn('rizo'):''}</span>`;
+  $('trim-ctx').innerHTML=howKey();
+  const ra=reefAdvice(); $('reefbox').innerHTML=`<strong>${ra.h}</strong><span>${ra.d}</span>${S.cfg.rizos>0?howBtn('rizo'):''}`;
   document.querySelectorAll('#chips .chip').forEach(c=>c.setAttribute('aria-pressed',c.dataset.k===S.problem?'true':'false'));
   renderUnderstood();
   renderChecklist();
