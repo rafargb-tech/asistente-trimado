@@ -162,20 +162,20 @@ function trim(){
   if(z==='proa'){M.push({c:t('Rumbo'),p:'',v:t('Estás en la zona muerta. Cae hasta que el génova deje de flamear antes de trimar nada.')});return {M,G};}
   const esc={cenida:bd==='light'?'Cazada sin pasarte: deja que la parte alta abra un poco.':hard?'Cazada. En rachas, baja el carro o larga un palmo para no escorar de más.':'Cazada: botavara cerca del eje y el catavientos de baluma alto volando casi siempre.',
     desc:'Un poco largada respecto a la ceñida.',traves:'A medio largar: larga hasta que flamee el grátil y caza un poco.',largo:'Muy largada: larga hasta que flamee el grátil y caza un poco.',popa:'Largada casi hasta los obenques, sin que la vela apoye en ellos.'}[z];
-  M.push({c:t('Escota'),p:t('§Baluma'),v:t(esc)});
-  if(c.carro){M.push({c:t('Carro'),p:t('§Baluma'),v:t(up?(bd==='light'?'A barlovento: centra la botavara con la escota algo suelta.':hard?'A sotavento: bájalo en cada racha antes de tocar la escota.':'Botavara en el eje.'):'A sotavento del todo.')});}
+  M.push({c:t('Escota'),p:t('§Baluma'),how:'escota_mayor',v:t(esc)});
+  if(c.carro){M.push({c:t('Carro'),p:t('§Baluma'),how:'carro',v:t(up?(bd==='light'?'A barlovento: centra la botavara con la escota algo suelta.':hard?'A sotavento: bájalo en cada racha antes de tocar la escota.':'Botavara en el eje.'):'A sotavento del todo.')});}
   else if(up&&hard){M.push({c:t('Carro'),p:t('§Baluma'),v:'',alt:t('Sin carro: para descargar, larga escota y controla la baluma con la contra.')});}
-  if(c.contra){M.push({c:t('Contra'),p:t('§Baluma'),v:t(up?(bd==='light'?'Suelta.':hard?(c.carro?'Tensa.':'Tensa: sin carro es la que sujeta la baluma cuando largas escota.'):'Sin holgura, sin tirar.'):z==='popa'?'Tensa moderada: evita que la botavara suba y que el barco balancee.':'Ajustada para que la parte alta no se abra de más. En rachas fuertes, lárgala para soltar presión.')});}
+  if(c.contra){M.push({c:t('Contra'),p:t('§Baluma'),how:'contra',v:t(up?(bd==='light'?'Suelta.':hard?(c.carro?'Tensa.':'Tensa: sin carro es la que sujeta la baluma cuando largas escota.'):'Sin holgura, sin tirar.'):z==='popa'?'Tensa moderada: evita que la botavara suba y que el barco balancee.':'Ajustada para que la parte alta no se abra de más. En rachas fuertes, lárgala para soltar presión.')});}
   else M.push({c:t('Contra'),p:t('§Baluma'),v:'',alt:t('Sin contra, la botavara sube al largar escota y la vela se abre arriba. A rumbos abiertos tendrás más escora y balanceo.')});
-  if(c.pujamen) M.push({c:t('Pujamen'),p:t('§Pujamen'),v:t(hard?'Cazado a tope: aplana el tercio bajo.':open?'Suelto: más bolsa, más potencia.':bd==='light'?'Algo suelto: bolsa abajo.':'Medio: sin arrugas en el pujamen.')});
-  M.push({c:c.cunningham?t('Cunningham'):t('Driza'),p:t('§Grátil'),v:t(hard?'Tenso: lleva la bolsa hacia delante y abre la baluma alta.':'Suelto: unas arrugas leves en el grátil no importan.')});
-  if(c.backstay) M.push({c:t('Estay de popa'),p:t('§Bolsa'),v:t(open?(hard?'Tensor algo cazado: sujeta el aparejo.':'Tensor suelto: más bolsa.'):hard?(c.rig==='fraccionado'?'Tensor cazado: curva el mástil, aplana la mayor y abre la baluma alta. De paso tensa el estay de proa y el génova se aplana.':'Tensor cazado: en aparejo a tope casi no toca la mayor; lo que hace es tensar el estay de proa para que no se combe y el génova vaya más plano.'):bd==='light'?'Tensor suelto.':'Tensor un poco cazado: lo justo para que el estay de proa no se combe.')});
-  if(z==='popa'){G.push({c:t('Escota'),p:t('§Baluma'),v:t(c.tangon?'Pásalo a orejas con el tangón: a barlovento, opuesto a la mayor.':'Tapado por la mayor. Sin tangón, las orejas son inestables: enróllalo o abre a un largo.')});}
-  else G.push({c:t('Escota'),p:t('§Baluma'),v:t(up?'Cazada hasta que la baluma quede a unos centímetros de la cruceta y los catavientos vuelen horizontales.':'Larga hasta que el catavientos de barlovento se levante y caza un poco.')});
+  if(c.pujamen) M.push({c:t('Pujamen'),p:t('§Pujamen'),how:'pujamen',v:t(hard?'Cazado a tope: aplana el tercio bajo.':open?'Suelto: más bolsa, más potencia.':bd==='light'?'Algo suelto: bolsa abajo.':'Medio: sin arrugas en el pujamen.')});
+  M.push({c:c.cunningham?t('Cunningham'):t('Driza'),p:t('§Grátil'),how:'cunningham',v:t(hard?'Tenso: lleva la bolsa hacia delante y abre la baluma alta.':'Suelto: unas arrugas leves en el grátil no importan.')});
+  if(c.backstay) M.push({c:t('Estay de popa'),p:t('§Bolsa'),how:'backstay',v:t(open?(hard?'Tensor algo cazado: sujeta el aparejo.':'Tensor suelto: más bolsa.'):hard?(c.rig==='fraccionado'?'Tensor cazado: curva el mástil, aplana la mayor y abre la baluma alta. De paso tensa el estay de proa y el génova se aplana.':'Tensor cazado: en aparejo a tope casi no toca la mayor; lo que hace es tensar el estay de proa para que no se combe y el génova vaya más plano.'):bd==='light'?'Tensor suelto.':'Tensor un poco cazado: lo justo para que el estay de proa no se combe.')});
+  if(z==='popa'){G.push({c:t('Escota'),p:t('§Baluma'),how:c.tangon?'orejas':'enrollador',v:t(c.tangon?'Pásalo a orejas con el tangón: a barlovento, opuesto a la mayor.':'Tapado por la mayor. Sin tangón, las orejas son inestables: enróllalo o abre a un largo.')});}
+  else G.push({c:t('Escota'),p:t('§Baluma'),how:'escota_genova',v:t(up?'Cazada hasta que la baluma quede a unos centímetros de la cruceta y los catavientos vuelen horizontales.':'Larga hasta que el catavientos de barlovento se levante y caza un poco.')});
   if(c.escotero){G.push({c:t('Escotero'),p:t('§Baluma'),how:'escotero',v:t(open||z==='desc'?'Adelante y, si tienes barber o carril exterior, hacia fuera.':bd==='light'?'Adelante: más bolsa abajo.':hard?'Atrás: abre la baluma alta y descarga arriba.':'Neutro: al orzar, los catavientos alto y bajo flamean a la vez.')});}
   else G.push({c:t('Escotero'),p:t('§Baluma'),v:'',alt:t('Fijo: si la parte alta flamea antes que la baja, no lo puedes corregir; compensa con la escota.')});
-  G.push({c:t('Driza'),p:t('§Grátil'),v:t(hard?'Tensa: sin arrugas, la bolsa adelante.':'Algo suelta: arrugas leves en el grátil.')});
-  if(c.enrollador&&hard) G.push({c:t('Enrollador'),p:t('§Superficie'),v:t('Reduce por fases. Al enrollar, adelanta el escotero porque el puño sube y avanza.')});
+  G.push({c:t('Driza'),p:t('§Grátil'),how:'driza_genova',v:t(hard?'Tensa: sin arrugas, la bolsa adelante.':'Algo suelta: arrugas leves en el grátil.')});
+  if(c.enrollador&&hard) G.push({c:t('Enrollador'),p:t('§Superficie'),how:'enrollador',v:t('Reduce por fases. Al enrollar, adelanta el escotero porque el puño sube y avanza.')});
   return {M,G};
 }
 function reefAdvice(){
@@ -200,13 +200,13 @@ const has=k=>c=>!!c[k];
 function reefSeq(m,p){
   const c=S.cfg,Rr=REEF[m],mainFirst=p==='orzada'||c.rig==='fraccionado'||!c.enrollador;
   const runNote=m==='run'?' '+t('Para rizar tienes que orzar hasta casi ceñida y el viento aparente sube de golpe: hazlo antes de que suba más.'):'';
-  const r1={t:t('Toma el {o} rizo de la mayor',{o:ord(1)}),d:t(p==='orzada'?'Se va de orzada porque la mayor empuja la popa hacia sotavento. Reducirla primero devuelve el equilibrio al timón.':c.rig==='fraccionado'?'En aparejo fraccionado la mayor es la vela principal: se riza primero.':'Reduce mayor para bajar escora y timón.')+runNote,need:cc=>cc.rizos>=1,req:'rizos',reef:1};
-  const g1={t:t('Enrolla parte del génova'),d:(!mainFirst?t('En aparejo a tope el génova es el motor grande: reducirlo primero baja la escora sin dejar el barco ardiente.')+' ':'')+t('Más o menos un tercio (aprox.). Adelanta el escotero al enrollar.'),need:has('enrollador'),req:'enrollador',reef:1};
+  const r1={t:t('Toma el {o} rizo de la mayor',{o:ord(1)}),d:t(p==='orzada'?'Se va de orzada porque la mayor empuja la popa hacia sotavento. Reducirla primero devuelve el equilibrio al timón.':c.rig==='fraccionado'?'En aparejo fraccionado la mayor es la vela principal: se riza primero.':'Reduce mayor para bajar escora y timón.')+runNote,need:cc=>cc.rizos>=1,req:'rizos',reef:1,how:'rizo'};
+  const g1={t:t('Enrolla parte del génova'),d:(!mainFirst?t('En aparejo a tope el génova es el motor grande: reducirlo primero baja la escora sin dejar el barco ardiente.')+' ':'')+t('Más o menos un tercio (aprox.). Adelanta el escotero al enrollar.'),need:has('enrollador'),req:'enrollador',reef:1,how:'enrollador'};
   const seq=mainFirst?[[r1,Rr[0]],[g1,Rr[0]+3]]:[[g1,Rr[0]],[r1,Rr[0]+3]];
-  seq.push([{t:t('Toma el {o} rizo',{o:ord(2)}),d:t('Si con el primero sigues escorando de más o con mucho timón.'),need:cc=>cc.rizos>=2,req:'2º rizo',reef:1},Rr[1]]);
-  seq.push([{t:t('Enrolla más el génova'),d:t('Hasta la mitad o menos (aprox.); un génova muy enrollado pierde forma, por eso va al final.'),need:has('enrollador'),req:'enrollador',reef:1},Rr[1]+3]);
-  seq.push([{t:t('Toma el {o} rizo',{o:ord(3)}),d:t('Último escalón de mayor.'),need:cc=>cc.rizos>=3,req:'3er rizo',reef:1},Rr[2]]);
-  seq.push([{t:t('Si aún sufres: cambia el plan'),d:t('Abre rumbo, ponte al pairo o vuelve a puerto. Chalecos y líneas de vida puestos.'),need:()=>true,kind:'Seguridad',reef:1},Rr[2]+4]);
+  seq.push([{t:t('Toma el {o} rizo',{o:ord(2)}),d:t('Si con el primero sigues escorando de más o con mucho timón.'),need:cc=>cc.rizos>=2,req:'2º rizo',reef:1,how:'rizo'},Rr[1]]);
+  seq.push([{t:t('Enrolla más el génova'),d:t('Hasta la mitad o menos (aprox.); un génova muy enrollado pierde forma, por eso va al final.'),need:has('enrollador'),req:'enrollador',reef:1,how:'enrollador'},Rr[1]+3]);
+  seq.push([{t:t('Toma el {o} rizo',{o:ord(3)}),d:t('Último escalón de mayor.'),need:cc=>cc.rizos>=3,req:'3er rizo',reef:1,how:'rizo'},Rr[2]]);
+  seq.push([{t:t('Si aún sufres: cambia el plan'),d:t('Abre rumbo, ponte al pairo o vuelve a puerto. Chalecos y líneas de vida puestos.'),need:()=>true,kind:'Seguridad',reef:1,how:'pairo'},Rr[2]+4]);
   return seq.map(([s,wf])=>Object.assign({wf,kind:'Reducir'},s));
 }
 function steps(p){
@@ -579,7 +579,7 @@ function diagnoseTT(){
   else if(h.bot&&!h.top) ms.push(t('<b>Parte baja ahogada.</b>')+' '+t(c.pujamen?'Caza el pujamen para aplanar abajo.':'Larga un pelo de escota.'));
   else ms.push(t('<b>Revisa la escota de mayor:</b> larga un pelo y mira si salen.'));
   const Lh=a=>a.map(x=>`<li>${x}</li>`).join('');
-  return `<p class="subh">${t('Qué hacer')}</p><div><p class="tt-h" style="margin:0 0 4px">${t('Génova')}</p><ol>${Lh(gs)}</ol></div><div><p class="tt-h" style="margin:0 0 4px">${t('Mayor')}</p><ol>${Lh(ms)}</ol></div>`;
+  return `<p class="subh">${t('Qué hacer')}</p><div><p class="tt-h" style="margin:0 0 4px">${t('Génova')}</p><ol>${Lh(gs)}</ol></div><div><p class="tt-h" style="margin:0 0 4px">${t('Mayor')}</p><ol>${Lh(ms)}</ol></div><div>${howBtn('escota_genova')}</div>`;
 }
 
 /* ---------- Textos estáticos ---------- */
@@ -620,72 +620,16 @@ document.querySelectorAll('#langs button').forEach(b=>b.onclick=()=>{
 
 
 /* ---------- Cómo se hace ---------- */
-const HOW_BY_STEP={'Retrasa el escotero del génova':'escotero','Adelanta el escotero del génova':'escotero','Escotero del génova algo atrás':'escotero','Adelanta el escotero':'escotero',
-  'Si el alto rompe antes que el bajo: escotero adelante':'escotero','Si el bajo rompe antes que el alto: escotero atrás':'escotero'};
-function howBtn(k){return `<button type="button" class="howbtn" data-how="${k}"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5"/><path d="M6.6 5.6 10.6 8l-4 2.4z" fill="currentColor" stroke="none"/></svg>${t('Cómo se hace')}</button>`;}
-const ease=x=>x<.5?2*x*x:1-Math.pow(-2*x+2,2)/2;
-const HOW={
-  escotero:{
-    title:'Mover el escotero del génova',
-    steps:[
-      {t:'Orza despacio y mira qué lanita de barlovento rompe primero.',s:{p:.6,tt:['ok','ok','bad'],pill:['Lanitas','tt'],halo:'tt'}},
-      {t:'Larga un poco de escota para quitar carga del carro.',s:{p:.6,slack:true,pill:['Escota','sheet'],halo:'sheet'}},
-      {t:'Mueve el carro: adelante si rompe antes la alta, atrás si rompe antes la baja.',s:{p:.2,from:.6,arrow:1,pill:['Escotero','car'],halo:'car'}},
-      {t:'Caza y comprueba: las tres lanitas rompen a la vez.',s:{p:.2,tt:['ok','ok','ok'],check:true}}
-    ],
-    fx:[['Adelante','Tira hacia abajo. Baluma cerrada y más bolsa abajo. Para poco viento o con mar.'],
-        ['Atrás','Tira hacia atrás. Pujamen plano y la parte alta abierta, que descarga. Para viento fuerte.']],
-    note:'No muevas el carro con la escota cargada: el pasador se atasca y te puedes pillar los dedos.'
-  }
-};
-/* Ilustración común: génova de lado, proa a la derecha */
-function ilGeo(p){
-  const T=[322,186],H=[112,36],C=[132-6*p,176+3*p];
-  const lm=[(H[0]+C[0])/2,(H[1]+C[1])/2], lk=-5+11*p, lc=[lm[0]-lk,lm[1]];
-  const fm=[(T[0]+C[0])/2,(T[1]+C[1])/2], fd=14-10*p;
-  return {T,H,C,lm,lc,fm,fd,tx0:106,tx1:170,ty:197,cx:170-64*p};
-}
-function drawIl(svg,s){
-  svg.innerHTML=''; const g=ilGeo(s.p); const m=(tag,at,txt)=>{const e=mk(tag,at,svg);if(txt!=null)e.textContent=txt;return e;};
-  m('rect',{x:0,y:0,width:360,height:240,class:'il-sky'});
-  m('path',{d:'M0 214 Q45 206 90 214 T180 214 T270 214 T360 214 V240 H0 Z',class:'il-sea'});
-  m('path',{d:'M0 226 Q45 220 90 226 T180 226 T270 226 T360 226 V240 H0 Z',class:'il-sea2'});
-  m('path',{d:'M14 198 Q180 206 346 190 L334 216 Q180 226 30 218 Z',class:'il-hull'});
-  m('path',{d:'M24 210 Q180 218 338 204 L336 208 Q180 222 26 214 Z',class:'il-stripe'});
-  m('path',{d:'M20 198 Q180 206 344 190 L344 193 Q180 209 20 201 Z',class:'il-deck'});
-  m('line',{x1:92,y1:200,x2:92,y2:14,class:'il-mast'});
-  m('line',{x1:94,y1:18,x2:340,y2:191,class:'il-stay'});
-  m('path',{d:`M${g.T} L${g.H} Q${g.lc} ${g.C} Q${g.fm[0]},${g.fm[1]+g.fd} ${g.T} Z`,class:'il-sail'});
-  [.3,.55,.78].forEach(f=>{const a=[g.C[0]+(g.H[0]-g.C[0])*f,g.C[1]+(g.H[1]-g.C[1])*f],b=[g.T[0]+(g.H[0]-g.T[0])*f,g.T[1]+(g.H[1]-g.T[1])*f];
-    m('path',{d:`M${a} Q${(a[0]+b[0])/2},${(a[1]+b[1])/2+6} ${b}`,class:'il-seam'});});
-  const tts=s.tt||['ok','ok','ok'], ttp=[];
-  [.28,.5,.72].forEach((f,i)=>{const x=g.T[0]+(g.H[0]-g.T[0])*f-10,y=g.T[1]+(g.H[1]-g.T[1])*f+3,bad=tts[i]==='bad';ttp.push([x,y]);
-    m('circle',{cx:x,cy:y,r:2,class:'il-pin'});
-    m('path',{d:bad?`M${x},${y} c-4,-8 -9,5 -13,-4 s-6,-7 -10,1`:`M${x},${y} l-24,0`,class:bad?'il-tt-bad':'il-tt-ok'});});
-  m('line',{x1:g.tx0,y1:g.ty,x2:g.tx1,y2:g.ty,class:'il-track'});
-  const cy=g.ty-5;
-  m('path',{d:s.slack?`M${g.C} Q${(g.C[0]+g.cx)/2+10},${cy+16} ${g.cx},${cy}`:`M${g.C} L${g.cx},${cy}`,class:'il-rope'});
-  if(s.from!=null){const fx=170-64*s.from; m('rect',{x:fx-10,y:cy-6,width:20,height:11,rx:3,class:'il-car',opacity:.25});}
-  m('rect',{x:g.cx-10,y:cy-6,width:20,height:11,rx:3,class:'il-car'});
-  m('circle',{cx:g.C[0],cy:g.C[1],r:4.5,class:'il-car'});
-  if(s.arrow){const ax=(g.tx0+g.tx1)/2, ay=g.ty+26, d=s.arrow;
-    m('path',{d:`M${ax-d*28},${ay} L${ax+d*14},${ay} L${ax+d*14},${ay-8} L${ax+d*30},${ay+3} L${ax+d*14},${ay+14} L${ax+d*14},${ay+6} L${ax-d*28},${ay+6} Z`,class:'il-big'});}
-  const target={tt:ttp[2],sheet:[(g.C[0]+g.cx)/2+(s.slack?6:0),(g.C[1]+cy)/2+(s.slack?8:0)],car:[g.cx,cy]};
-  if(s.halo) m('circle',{cx:target[s.halo][0]-(s.halo==='tt'?10:0),cy:target[s.halo][1],r:s.halo==='tt'?20:18,class:'il-halo'});
-  if(s.pill){const [txt,k]=s.pill, tg=target[k], label=t(txt), w=label.length*8.6+20, px=k==='tt'?250:56, py=k==='tt'?40:120;
-    m('line',{x1:tg[0]-(k==='tt'?10:0),y1:tg[1],x2:px,y2:py,class:'il-lead'});
-    m('rect',{x:px-w/2,y:py-14,width:w,height:28,rx:14,class:'il-pill'}); m('text',{x:px,y:py+6,'text-anchor':'middle',class:'il-pt'},label);}
-  if(s.check) m('path',{d:'M262 48 l14 14 l28 -30',class:'il-check'});
-}
+/*__HOW__*/
 let howState=null;
 function openHow(k){
   const H=HOW[k]; if(!H) return;
   $('how').hidden=false; document.body.classList.add('how-open');
-  $('how-title').textContent=t(H.title);
+  $('how-title').textContent=L(H.title);
   const ol=$('how-strip'); ol.innerHTML='';
-  H.steps.forEach((st,i)=>{const li=document.createElement('li');li.innerHTML=`<svg viewBox="0 0 360 240" role="img" aria-hidden="true"></svg><p><b>${i+1}</b>${t(st.t)}</p>`;ol.appendChild(li);drawIl(li.querySelector('svg'),st.s);});
-  $('how-fx').innerHTML=H.fx.map(([h,d])=>`<div><h3>${t(h)}</h3><p>${t(d)}</p></div>`).join('');
-  $('how-note').textContent=t(H.note);
+  H.steps.forEach((st,i)=>{const li=document.createElement('li');li.innerHTML=`<svg viewBox="0 0 360 240" role="img" aria-hidden="true"></svg><p><b>${i+1}</b>${L(st.t)}</p>`;ol.appendChild(li);drawScene(li.querySelector('svg'),Object.assign({},st.s));});
+  $('how-fx').innerHTML=(H.fx||[]).map(([h,d])=>`<div><h3>${L(h)}</h3><p>${L(d)}</p></div>`).join(''); $('how-fx').hidden=!H.fx;
+  $('how-note').textContent=L(H.note); $('how-note').hidden=!H.note;
   const reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
   howState={k,i:0,timer:0,opener:document.activeElement};
   const lis=[...ol.children]; const hi=()=>lis.forEach((li,n)=>li.classList.toggle('on',n===howState.i));
@@ -709,7 +653,7 @@ function render(){
   drawDial();
   const tr=trim(); $('t-mayor').innerHTML=tr.M.map(li).join(''); $('t-genova').innerHTML=tr.G.map(li).join('');
   $('trim-ctx').textContent='';
-  const ra=reefAdvice(); $('reefbox').innerHTML=`<strong>${ra.h}</strong><span>${ra.d}</span>`;
+  const ra=reefAdvice(); $('reefbox').innerHTML=`<strong>${ra.h}</strong><span>${ra.d}${S.cfg.rizos>0?howBtn('rizo'):''}</span>`;
   document.querySelectorAll('#chips .chip').forEach(c=>c.setAttribute('aria-pressed',c.dataset.k===S.problem?'true':'false'));
   renderUnderstood();
   renderChecklist();

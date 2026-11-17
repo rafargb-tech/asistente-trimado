@@ -10,6 +10,7 @@ VERSION = re.search(r'Prototipo v([\d.]+)', open(os.path.join(SRC, 'head.html'))
 def page():
     h = open(os.path.join(SRC, 'head.html')).read()
     a = open(os.path.join(SRC, 'app.js')).read()
+    a = a.replace('/*__HOW__*/', open(os.path.join(SRC, 'how.js')).read())
     i = json.load(open(os.path.join(SRC, 'i18n.json')))
     return h + '<script>\nconst I18N=' + json.dumps(i, ensure_ascii=False, separators=(',', ':')) + ';\n' + a + '</script>\n'
 
