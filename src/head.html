@@ -251,6 +251,48 @@ footer p{margin:0}
 .d-arrow{stroke:var(--accent);stroke-width:3;stroke-linecap:round;fill:none}
 .d-arrowhead{fill:var(--accent)}
 @media (prefers-reduced-motion:reduce){body{transition:none}}
+/* Cómo se hace */
+.how[hidden]{display:none}
+.howbtn{appearance:none;border:0;background:none;padding:6px 0 0;margin:0;display:inline-flex;align-items:center;gap:6px;color:var(--sea);font:500 13px/1.2 var(--f-body);cursor:pointer}
+.howbtn svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.4}
+.howbtn:hover{text-decoration:underline;text-underline-offset:3px}
+.val .howbtn{display:flex}
+body.how-open{overflow:hidden}
+.how{position:fixed;inset:0;z-index:50;background:rgba(6,12,16,.55);display:flex;align-items:flex-end;justify-content:center;padding:max(12px,env(safe-area-inset-top,0px)) max(0px,env(safe-area-inset-right,0px)) 0 max(0px,env(safe-area-inset-left,0px))}
+@media (min-width:640px){.how{align-items:center;padding:24px}}
+.how-card{background:var(--bg);color:var(--ink);width:100%;max-width:560px;max-height:calc(100% - 8px);overflow:auto;border-radius:12px 12px 0 0;padding:16px 18px calc(18px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:12px;box-shadow:0 -8px 40px -12px rgba(0,0,0,.4)}
+@media (min-width:640px){.how-card{border-radius:10px;padding-bottom:20px}}
+.how-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.how-head h2{font-weight:600;font-size:20px;line-height:1.2}
+.how-x{appearance:none;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);border-radius:3px;width:34px;height:34px;display:grid;place-items:center;cursor:pointer;flex:none}
+.how-x svg{width:14px;height:14px;stroke:currentColor;stroke-width:1.8;fill:none}
+#how-svg{width:100%;height:auto;display:block;background:var(--surface);border:1px solid var(--line);border-radius:6px}
+.how-ctl{display:flex;gap:8px;align-items:center}
+.how-play{appearance:none;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);border-radius:3px;width:34px;height:34px;display:grid;place-items:center;cursor:pointer}
+.how-play svg{width:14px;height:14px}
+.how-play .i-play{fill:currentColor} .how-play .i-pause{stroke:currentColor;stroke-width:2.2;fill:none;display:none}
+.how-play[aria-pressed="true"] .i-play{display:none} .how-play[aria-pressed="true"] .i-pause{display:block}
+.how-cap{margin:0;font-size:14.5px;min-height:3em}
+.how-steps{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14px}
+.how-note{margin:0;font-size:13px;color:var(--warn)}
+.hw-hull{fill:var(--sea-soft);stroke:var(--ink);stroke-width:1.2}
+.hw-mast{stroke:var(--ink);stroke-width:3;stroke-linecap:round}
+.hw-stay{stroke:var(--muted);stroke-width:1}
+.hw-track{stroke:var(--ink);stroke-width:3;stroke-linecap:round}
+.hw-hole{fill:var(--surface)}
+.hw-sail{fill:var(--sea);fill-opacity:.14;stroke:none}
+.hw-leech,.hw-foot{fill:none;stroke:var(--ink);stroke-width:1.6}
+.hw-sheet{stroke:var(--accent);stroke-width:2;stroke-dasharray:4 3}
+.hw-car{fill:var(--accent);stroke:var(--bg);stroke-width:1.2}
+.hw-clew{fill:var(--bg);stroke:var(--ink);stroke-width:1.5}
+.hw-arrow{fill:none;stroke:var(--accent);stroke-width:1.6;stroke-linecap:round}
+.hw-lbl{fill:var(--muted);font:500 11px var(--f-body)}
+.hw-lbl.small{font-size:10px}
+.hw-box{fill:var(--bg);stroke:var(--line)}
+.hw-axis{stroke:var(--line-strong);stroke-width:1;stroke-dasharray:2 3}
+.hw-sec{fill:none;stroke-width:2;stroke-linecap:round}
+.hw-sec.low{stroke:var(--ink)} .hw-sec.mid{stroke:var(--muted);stroke-width:1.4} .hw-sec.top{stroke:var(--accent)}
+
 /* v3.2: menos etiquetas, menos ruido */
 .meta{font-size:12.5px;color:var(--muted)}
 .ver{font:400 12px/1.3 var(--f-body);letter-spacing:0}
@@ -284,7 +326,7 @@ footer{max-width:none}
   <header class="appbar">
     <div class="brand">
       <svg class="mark" viewBox="0 0 34 34" aria-hidden="true"><path class="m3" d="M3 28.5c4 0 4-2 8-2s4 2 8 2 4-2 8-2 4 2 4 2"/><path class="m1" d="M16 3v21H6.5z"/><path class="m2" d="M18 6l9.5 18H18z"/></svg>
-      <div><h1>Asistente de Trimado</h1><span class="ver">Prototipo v3.4</span></div>
+      <div><h1>Asistente de Trimado</h1><span class="ver">Prototipo v3.5</span></div>
     </div>
     <div class="prefs">
       <div class="seg small langs" id="langs" role="group" aria-label="Idioma"><button type="button" data-v="es" lang="es">ES</button><button type="button" data-v="en" lang="en">EN</button><button type="button" data-v="fr" lang="fr">FR</button></div>
@@ -502,6 +544,19 @@ footer{max-width:none}
   </div>
   </div>
 
+  <div class="how" id="how" hidden role="dialog" aria-modal="true" aria-labelledby="how-title">
+    <div class="how-card">
+      <div class="how-head"><h2 id="how-title"></h2><button type="button" class="how-x" id="how-close" aria-label="Cerrar"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 3.5l9 9M12.5 3.5l-9 9"/></svg></button></div>
+      <svg id="how-svg" viewBox="0 0 360 240" role="img" aria-label="Esquema"></svg>
+      <div class="how-ctl">
+        <div class="seg small"><button type="button" id="how-a"></button><button type="button" id="how-b"></button></div>
+        <button type="button" class="how-play" id="how-play"><svg viewBox="0 0 16 16" aria-hidden="true"><path class="i-play" d="M5 3.5 12 8l-7 4.5z"/><path class="i-pause" d="M5 3.5v9M11 3.5v9"/></svg></button>
+      </div>
+      <p class="how-cap" id="how-cap" aria-live="polite"></p>
+      <ol class="how-steps" id="how-steps"></ol>
+      <p class="how-note" id="how-note"></p>
+    </div>
+  </div>
   <footer>
     <p>Prototipo. Las polares son estimaciones y los umbrales de rizo, orientativos: si estás pensando en rizar, riza.</p>
   </footer>
