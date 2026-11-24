@@ -1,6 +1,8 @@
 """Construye la app.
   python3 tools/build.py            -> index.html (web/PWA para GitHub Pages)
   python3 tools/build.py artifact   -> dist/artifact.html (versión para Claude, fuentes de Google, sin PWA)
+  python3 tools/build.py native     -> www/ (app nativa de Capacitor, sin service worker)
+  python3 tools/build.py all        -> las tres
 """
 import json, os, re, sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -21,7 +23,7 @@ FONTS = [('IBM Plex Sans', 400, 'ibm-plex-sans-latin-400'), ('IBM Plex Sans', 50
 RESET = ('*,*::before,*::after{box-sizing:border-box}html{color-scheme:light}body{margin:0;font:14px system-ui,-apple-system,"Segoe UI",sans-serif}'
          'img{max-width:100%}[hidden]{display:none!important}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}')
 
-def web():
+def web(native=False):
     s = page()
     title = s[:s.index('</title>') + 8]
     a = s.index('<link rel="preconnect"'); b = s.index('<style>')
@@ -52,6 +54,14 @@ def web():
 '''
     sw = ("<script>if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost')){addEventListener('load',()=>{"
           "navigator.serviceWorker.register('sw.js').catch(()=>{});});}</script>\n")
+    if native:
+        head = head.replace('<link rel="manifest" href="manifest.webmanifest">\n', '')
+        out = head + body + '\n</body>\n</html>\n'
+        www = os.path.join(ROOT, 'www'); import shutil
+        shutil.rmtree(www, ignore_errors=True); os.makedirs(www)
+        open(os.path.join(www, 'index.html'), 'w').write(out)
+        for d in ('fonts', 'icons'): shutil.copytree(os.path.join(ROOT, d), os.path.join(www, d))
+        print('native v' + VERSION, len(out)); return
     out = head + body + '\n' + sw + '</body>\n</html>\n'
     open(os.path.join(ROOT, 'index.html'), 'w').write(out)
     swsrc = open(os.path.join(ROOT, 'tools', 'sw.template.js')).read().replace('__VERSION__', VERSION)
@@ -64,4 +74,8 @@ def artifact():
     print('artifact v' + VERSION)
 
 if __name__ == '__main__':
-    artifact() if len(sys.argv) > 1 and sys.argv[1] == 'artifact' else web()
+    arg = sys.argv[1] if len(sys.argv) > 1 else ''
+    if arg == 'artifact': artifact()
+    elif arg == 'native': web(native=True)
+    elif arg == 'all': web(); web(native=True); artifact()
+    else: web()

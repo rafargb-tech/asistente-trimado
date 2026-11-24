@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Trimado</string>
+    <string name="title_activity_main">Trimado</string>
+    <string name="package_name">com.soyrgb.trimado</string>
+    <string name="custom_url_scheme">com.soyrgb.trimado</string>
+</resources>

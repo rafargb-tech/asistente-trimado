@@ -254,6 +254,12 @@ footer p{margin:0}
 .d-arrow{stroke:var(--accent);stroke-width:3;stroke-linecap:round;fill:none}
 .d-arrowhead{fill:var(--accent)}
 @media (prefers-reduced-motion:reduce){body{transition:none}}
+
+/* Funciones nativas */
+.mini.gps{display:inline-flex;align-items:center;gap:6px;height:42px;align-self:flex-end}
+.mini.gps svg,.mini.awake svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.5}
+.mini.gps[aria-pressed="true"],.mini.awake[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.mini.awake{width:34px;height:34px;padding:0;display:grid;place-items:center}
 /* Cómo se hace */
 .howbtn.icon{width:34px;height:34px;padding:0;margin:-6px -6px 0 0;display:grid;place-items:center;border-radius:50%;flex:none}
 .howbtn.icon svg{width:19px;height:19px}
@@ -404,10 +410,11 @@ footer{max-width:none}
   <header class="appbar">
     <div class="brand">
       <svg class="mark" viewBox="0 0 34 34" aria-hidden="true"><path class="m3" d="M3 28.5c4 0 4-2 8-2s4 2 8 2 4-2 8-2 4 2 4 2"/><path class="m1" d="M16 3v21H6.5z"/><path class="m2" d="M18 6l9.5 18H18z"/></svg>
-      <div><h1>Asistente de Trimado</h1><span class="ver">Prototipo v3.6</span></div>
+      <div><h1>Asistente de Trimado</h1><span class="ver">Prototipo v3.7</span></div>
     </div>
     <div class="prefs">
       <div class="seg small langs" id="langs" role="group" aria-label="Idioma"><button type="button" data-v="es" lang="es">ES</button><button type="button" data-v="en" lang="en">EN</button><button type="button" data-v="fr" lang="fr">FR</button></div>
+      <button type="button" class="mini awake" id="awake-btn" aria-pressed="false" aria-label="Mantener la pantalla encendida" hidden><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="4" y="1.5" width="8" height="13" rx="1.6"/><path d="M6.5 5.5h3M6.5 8h3"/></svg></button>
       <div class="seg small themes" id="themes" role="group" aria-label="Tema">
         <button type="button" data-v="auto" aria-label="Automático" title="Automático"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="5.5"/><path d="M8 2.5v11a5.5 5.5 0 0 0 0-11z" fill="currentColor" stroke="none"/></svg></button>
         <button type="button" data-v="light" aria-label="Día" title="Día"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="3"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3 3l1.4 1.4M11.6 11.6 13 13M3 13l1.4-1.4M11.6 4.4 13 3"/></svg></button>
@@ -465,6 +472,7 @@ footer{max-width:none}
         <div class="perf">
           <div class="perf-row">
             <div class="field" style="flex:0 0 150px"><label for="b-stw">Velocidad en el agua</label><input id="b-stw" type="number" step="0.1" min="0" max="30" inputmode="decimal" placeholder="kn"></div>
+            <button type="button" class="mini gps" id="gps-btn" aria-pressed="false" hidden><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="2.4"/><circle cx="8" cy="8" r="5.6"/><path d="M8 0.8v2.2M8 13v2.2M0.8 8H3M13 8h2.2"/></svg><span>GPS</span></button>
             <p class="hint" id="perf-txt" style="flex:1 1 170px"></p>
           </div>
           <div class="meter" id="perf-m" hidden><i id="perf-bar"></i></div>

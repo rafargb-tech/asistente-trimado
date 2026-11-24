@@ -28,6 +28,7 @@ S.theme='auto'; try{const th=localStorage.getItem('trim-theme'); if(['auto','lig
 function applyTheme(){
   const r=document.documentElement; if(S.theme==='auto') r.removeAttribute('data-mode'); else r.setAttribute('data-mode',S.theme);
   document.querySelectorAll('#themes button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===S.theme?'true':'false'));
+  if(typeof syncStatusBar==='function') syncStatusBar();
 }
 document.querySelectorAll('#themes button').forEach(b=>b.addEventListener('click',()=>{S.theme=b.dataset.v;try{localStorage.setItem('trim-theme',S.theme)}catch(e){}applyTheme();}));
 applyTheme();
@@ -287,7 +288,7 @@ function renderChecklist(){
     const id=p+'-'+i, st=statusOf(s,i,list,p), li=document.createElement('li');
     if(s.reef) li.classList.add('reef'); if(S.done[id]) li.classList.add('done');
     li.innerHTML=`<input type="checkbox" id="ck-${id}" ${S.done[id]?'checked':''} aria-label="${t('Hecho')}"><div><div class="st-t"><label for="ck-${id}"><span class="kind">${t(s.kind)}</span>${s.t}</label>${s.how?howBtn(s.how):''}</div><div class="st-d">${s.d}</div></div>${st.t?`<span class="stat ${st.c}">${st.t}</span>`:'<span></span>'}`;
-    li.querySelector('input').onchange=e=>{S.done[id]=e.target.checked;li.classList.toggle('done',e.target.checked);prog(list,p);};
+    li.querySelector('input').onchange=e=>{tap();S.done[id]=e.target.checked;li.classList.toggle('done',e.target.checked);prog(list,p);};
     ol.appendChild(li);
   });
   prog(list,p);
@@ -423,7 +424,7 @@ function renderBoats(){
   else if(a){st.className='dirty';st.textContent=t('Cambios sin guardar');}
   else {st.className='dirty';st.textContent=t('Sin guardar');}
   $('save-boat').textContent=a?t('Guardar cambios'):t('Guardar barco'); $('save-new').hidden=!a;
-  $('store-note').textContent=S.store==='db'?t('Se guardan en tu cuenta: los verás al abrir esta página en cualquier dispositivo.'):t('Se guardan solo en este navegador. Si borras los datos del navegador, se pierden.');
+  $('store-note').textContent=S.store==='db'?t('Se guardan en tu cuenta: los verás al abrir esta página en cualquier dispositivo.'):(CAP?t('Se guardan en este teléfono.'):t('Se guardan solo en este navegador. Si borras los datos del navegador, se pierden.'));
   const ul=$('boat-list'); ul.innerHTML='';
   if(S.loaded&&!S.boats.length){ul.innerHTML='<li class="empty">'+t('Aún no tienes barcos guardados. Rellena la ficha y pulsa <b>Guardar barco</b>.')+'</li>';}
   if(!S.loaded){ul.innerHTML='<li class="empty" id="boats-loading">'+t('Cargando tus barcos…')+'</li>';}
@@ -479,8 +480,51 @@ function renderCtx(){
   $('ctx-now').textContent=t('{z} con {a}° de aparente, amura de {s}.',{z:z.n,a:S.awa,s:sideName(S.side)});
   $('ctx-boat').textContent=(S.boat.name||t('Barco sin guardar'))+' · '+fmtLen(S.boat.loa);
 }
-$('b-stw').addEventListener('input',e=>{const v=num(e.target.value);S.stw=v>0?v:null;render();});
+$('b-stw').addEventListener('input',e=>{if(S.gps)setGps(false);const v=num(e.target.value);S.stw=v>0?v:null;render();});
 $('perf-go').addEventListener('click',()=>{const k=$('perf-go').dataset.k;if(S.problem!==k){S.problem=k;S.done={};}S.parsed={src:'chip'};render();location.hash='problema';});
+
+
+/* ---------- Funciones nativas (Capacitor) con alternativa web ---------- */
+var CAP=!!(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform());
+var PL=CAP?(window.Capacitor.Plugins||{}):{};
+function tap(){try{if(PL.Haptics)PL.Haptics.impact({style:'LIGHT'});else if(navigator.vibrate)navigator.vibrate(8);}catch(e){}}
+// Barra de estado acorde al tema
+function syncStatusBar(){const PL=(window.Capacitor&&window.Capacitor.Plugins)||{};if(!PL.StatusBar)return;const dark=S.theme==='dark'||(S.theme==='auto'&&matchMedia('(prefers-color-scheme: dark)').matches);
+  try{PL.StatusBar.setStyle({style:dark?'DARK':'LIGHT'});PL.StatusBar.setBackgroundColor({color:dark?'#080C0F':'#F3F5F4'}).catch(()=>{});}catch(e){}}
+// Pantalla siempre encendida
+S.awake=false; let wakeLock=null;
+async function setAwake(on){
+  S.awake=on; $('awake-btn').setAttribute('aria-pressed',on?'true':'false');
+  try{
+    if(PL.KeepAwake){on?await PL.KeepAwake.keepAwake():await PL.KeepAwake.allowSleep();}
+    else if('wakeLock' in navigator){if(on){wakeLock=await navigator.wakeLock.request('screen');}else if(wakeLock){await wakeLock.release();wakeLock=null;}}
+  }catch(e){S.awake=false;$('awake-btn').setAttribute('aria-pressed','false');}
+}
+if(PL.KeepAwake||'wakeLock' in navigator){$('awake-btn').hidden=false;$('awake-btn').onclick=()=>setAwake(!S.awake);
+  document.addEventListener('visibilitychange',()=>{if(S.awake&&!PL.KeepAwake&&document.visibilityState==='visible')setAwake(true);});}
+// Velocidad por GPS (sobre el fondo) para comparar con la polar
+S.gps=false; S.gpsMsg=null; let gpsWatch=null; const gpsBuf=[];
+function gpsFix(speed){ // m/s
+  if(speed==null||isNaN(speed)||speed<0) return;
+  gpsBuf.push(speed*1.943844); if(gpsBuf.length>5) gpsBuf.shift();
+  const kn=gpsBuf.reduce((x,y)=>x+y,0)/gpsBuf.length; S.stw=kn>0.05?kn:null; $('b-stw').value=S.stw?kn.toFixed(1):''; S.gpsMsg=null; render();
+}
+async function setGps(on){
+  const btn=$('gps-btn');
+  if(!on){S.gps=false;btn.setAttribute('aria-pressed','false');
+    try{if(gpsWatch!=null){if(PL.Geolocation)await PL.Geolocation.clearWatch({id:gpsWatch});else navigator.geolocation.clearWatch(gpsWatch);}}catch(e){}
+    gpsWatch=null;gpsBuf.length=0;S.gpsMsg=null;render();return;}
+  S.gps=true; btn.setAttribute('aria-pressed','true'); S.gpsMsg='Buscando señal GPS…'; render();
+  const fail=()=>{S.gps=false;btn.setAttribute('aria-pressed','false');S.gpsMsg='Sin permiso de ubicación o sin señal. Puedes escribir la velocidad a mano.';render();};
+  try{
+    if(PL.Geolocation){
+      const perm=await PL.Geolocation.requestPermissions().catch(()=>null);
+      if(perm&&perm.location==='denied') return fail();
+      gpsWatch=await PL.Geolocation.watchPosition({enableHighAccuracy:true,maximumAge:1000},(pos,err)=>{if(err||!pos)return; gpsFix(pos.coords.speed);});
+    } else gpsWatch=navigator.geolocation.watchPosition(pos=>gpsFix(pos.coords.speed),fail,{enableHighAccuracy:true,maximumAge:1000});
+  }catch(e){fail();}
+}
+if(CAP||('geolocation' in navigator)){$('gps-btn').hidden=false;$('gps-btn').onclick=()=>setGps(!S.gps);}
 
 /* ---------- Polar ---------- */
 function drawPolar(tw){
@@ -524,6 +568,8 @@ function renderPolar(){
       go.hidden=false; go.dataset.k=hard?'sobre':'potencia'; go.textContent=t('Ver checklist «{p}»',{p:pName(hard?'sobre':'potencia').toLowerCase()}); }
     perfTxt.textContent=tx;
   } else perfTxt.textContent='';
+  if(S.gpsMsg) perfTxt.textContent=t(S.gpsMsg);
+  else if(S.gps&&S.stw) perfTxt.textContent=t('GPS: velocidad sobre el fondo. Con corriente no coincide con la del agua.')+' '+perfTxt.textContent;
   $('polar-note').textContent=(note?note+' ':'')+t('Velocidades de barco limpio y bien trimado, sin spinnaker. Úsalo para compararte contigo mismo, no como nota absoluta.')+' '+t('Mete la velocidad en el agua (corredera), no la del GPS: la corriente engaña.');
   drawPolar(tw);
 }
@@ -539,9 +585,9 @@ function renderTT(){
   const g=$('tt-g'),m=$('tt-m'); g.innerHTML=`<span></span><span class="tt-h">${t('Barlovento')}</span><span class="tt-h">${t('Sotavento')}</span>`; m.innerHTML=`<span></span><span class="tt-h">${t('Lanita de baluma')}</span>`;
   TT_ROWS.forEach(([k,n])=>{
     const r=document.createElement('span');r.className='tt-r';r.textContent=t(n);g.appendChild(r);
-    ['w','l'].forEach(side=>g.appendChild(ttBtn(S.tt.g[k][side],t('Vuela'),t('Flamea'),t('Génova')+' · '+t(n).toLowerCase()+' · '+t(side==='w'?'Barlovento':'Sotavento').toLowerCase(),()=>{S.tt.g[k][side]=S.tt.g[k][side]?0:1;renderTT();})));
+    ['w','l'].forEach(side=>g.appendChild(ttBtn(S.tt.g[k][side],t('Vuela'),t('Flamea'),t('Génova')+' · '+t(n).toLowerCase()+' · '+t(side==='w'?'Barlovento':'Sotavento').toLowerCase(),()=>{tap();S.tt.g[k][side]=S.tt.g[k][side]?0:1;renderTT();})));
     const r2=document.createElement('span');r2.className='tt-r';r2.textContent=t(n);m.appendChild(r2);
-    m.appendChild(ttBtn(S.tt.m[k],t('Vuela'),t('Se esconde'),t('Mayor')+' · '+t('Lanita de baluma').toLowerCase()+' · '+t(n).toLowerCase(),()=>{S.tt.m[k]=S.tt.m[k]?0:1;renderTT();}));
+    m.appendChild(ttBtn(S.tt.m[k],t('Vuela'),t('Se esconde'),t('Mayor')+' · '+t('Lanita de baluma').toLowerCase()+' · '+t(n).toLowerCase(),()=>{tap();S.tt.m[k]=S.tt.m[k]?0:1;renderTT();}));
   });
   $('tt-out').innerHTML=diagnoseTT();
 }
@@ -663,6 +709,7 @@ function render(){
   renderBoats();
 }
 route();
+syncStatusBar(); if(window.matchMedia) matchMedia('(prefers-color-scheme: dark)').addEventListener('change',syncStatusBar);
 if(S.lang!=='es'){applyStatic(); buildToggles($('tg-mayor'),MAYOR_T); buildToggles($('tg-genova'),GEN_T); buildChips(); buildRumbos(); fillFicha();}
 else applyStatic();
 applyParse($('q').value);

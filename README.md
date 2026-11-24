@@ -17,3 +17,7 @@ Herramienta de trimado de velas para cruceros. Prototipo.
 - `tools/build.py` genera `index.html` y `sw.js`. Ejecuta `python3 tools/build.py` tras cualquier cambio en `src/`.
 - `index.html`, `sw.js`, `manifest.webmanifest`, `icons/`, `fonts/` es lo que publica GitHub Pages.
 - Fuentes IBM Plex bajo licencia SIL Open Font License (`fonts/OFL.txt`).
+
+## App nativa (iOS y Android)
+
+Proyecto Capacitor en `android/` e `ios/`. Ver [docs/PUBLICAR.md](docs/PUBLICAR.md) para compilar y publicar. Política de privacidad: [privacy.html](privacy.html).

@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Trimado · Privacidad</title>
+<link rel="icon" href="icons/favicon-32.png">
+<style>
+@font-face{font-family:Plex;src:url(fonts/ibm-plex-sans-latin-400-normal.woff2) format("woff2");font-weight:400}
+@font-face{font-family:Plex;src:url(fonts/ibm-plex-sans-latin-600-normal.woff2) format("woff2");font-weight:600}
+:root{--bg:#F3F5F4;--ink:#0D161B;--soft:#4A5A62;--line:#D5DCDD;--acc:#C2185B}
+@media (prefers-color-scheme:dark){:root{--bg:#0D161B;--ink:#E4ECEE;--soft:#9AAAB2;--line:#24323A;--acc:#F2578F}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 Plex,system-ui,sans-serif}
+main{max-width:680px;margin:0 auto;padding:32px 16px 64px}
+header{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:24px}
+header img{width:40px;height:40px;border-radius:9px}
+h1{font-size:22px;margin:0;font-weight:600}
+nav{margin-left:auto;display:flex;gap:4px}
+nav button{font:inherit;font-size:14px;background:none;border:1px solid var(--line);color:var(--ink);border-radius:6px;padding:4px 10px;cursor:pointer}
+nav button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+h2{font-size:17px;margin:28px 0 6px;font-weight:600}
+p,li{color:var(--soft)}
+p strong{color:var(--ink)}
+.date{font-size:14px;color:var(--soft);margin-top:40px;border-top:1px solid var(--line);padding-top:16px}
+a{color:var(--acc)}
+[hidden]{display:none}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <img src="icons/icon-192.png" alt="">
+  <h1 id="title">Trimado · Privacidad</h1>
+  <nav>
+    <button data-l="es" aria-pressed="true">ES</button>
+    <button data-l="en" aria-pressed="false">EN</button>
+    <button data-l="fr" aria-pressed="false">FR</button>
+  </nav>
+</header>
+
+<section lang="es" data-t="Trimado · Privacidad">
+  <p><strong>Trimado no recoge datos personales.</strong> No hay cuentas, ni analítica, ni publicidad, ni rastreo de ningún tipo.</p>
+  <h2>Lo que se guarda</h2>
+  <p>Los barcos que guardas, el idioma, el tema y los últimos ajustes se guardan solo en tu teléfono (o en tu navegador, si usas la versión web). No se envían a ningún servidor. Si desinstalas la app o borras sus datos, desaparecen.</p>
+  <h2>Ubicación</h2>
+  <p>La app solo pide la ubicación si pulsas el botón GPS, para calcular la velocidad del barco y compararla con la polar. Ese cálculo se hace en el teléfono. La posición no se guarda ni sale del dispositivo. Puedes negar el permiso y escribir la velocidad a mano.</p>
+  <h2>Conexión</h2>
+  <p>La app funciona sin conexión. No envía información a terceros.</p>
+  <h2>Menores</h2>
+  <p>Como no recogemos datos, tampoco recogemos datos de menores.</p>
+  <h2>Cambios</h2>
+  <p>Si esta política cambia, la nueva versión se publicará en esta misma página con su fecha.</p>
+  <h2>Contacto</h2>
+  <p>Para cualquier duda, abre una incidencia en <a href="https://github.com/rafargb-tech/asistente-trimado/issues">github.com/rafargb-tech/asistente-trimado</a>.</p>
+  <p class="date">Última actualización: 24 de noviembre de 2026</p>
+</section>
+
+<section lang="en" data-t="Trimado · Privacy" hidden>
+  <p><strong>Trimado does not collect personal data.</strong> There are no accounts, no analytics, no ads and no tracking of any kind.</p>
+  <h2>What is stored</h2>
+  <p>The boats you save, your language, theme and latest settings are stored only on your phone (or in your browser, if you use the web version). They are never sent to a server. If you uninstall the app or clear its data, they are gone.</p>
+  <h2>Location</h2>
+  <p>The app only asks for your location when you tap the GPS button, to work out the boat's speed and compare it with the polar. That calculation happens on the phone. Your position is not stored and never leaves the device. You can deny the permission and type the speed instead.</p>
+  <h2>Network</h2>
+  <p>The app works offline. It does not send information to third parties.</p>
+  <h2>Children</h2>
+  <p>Since we collect no data, we collect no data from children either.</p>
+  <h2>Changes</h2>
+  <p>If this policy changes, the new version will be published on this page with its date.</p>
+  <h2>Contact</h2>
+  <p>For any question, open an issue at <a href="https://github.com/rafargb-tech/asistente-trimado/issues">github.com/rafargb-tech/asistente-trimado</a>.</p>
+  <p class="date">Last updated: 24 November 2026</p>
+</section>
+
+<section lang="fr" data-t="Trimado · Confidentialité" hidden>
+  <p><strong>Trimado ne collecte aucune donnée personnelle.</strong> Pas de compte, pas d'analyse d'audience, pas de publicité, aucun suivi.</p>
+  <h2>Ce qui est enregistré</h2>
+  <p>Les bateaux que tu enregistres, la langue, le thème et les derniers réglages restent uniquement sur ton téléphone (ou dans ton navigateur pour la version web). Rien n'est envoyé à un serveur. Si tu désinstalles l'app ou effaces ses données, tout disparaît.</p>
+  <h2>Localisation</h2>
+  <p>L'app ne demande ta position que si tu touches le bouton GPS, pour calculer la vitesse du bateau et la comparer à la polaire. Le calcul se fait sur le téléphone. La position n'est ni enregistrée ni transmise. Tu peux refuser l'autorisation et saisir la vitesse à la main.</p>
+  <h2>Réseau</h2>
+  <p>L'app fonctionne hors ligne. Elle n'envoie aucune information à des tiers.</p>
+  <h2>Mineurs</h2>
+  <p>Comme nous ne collectons aucune donnée, nous n'en collectons pas non plus sur les mineurs.</p>
+  <h2>Modifications</h2>
+  <p>Si cette politique change, la nouvelle version sera publiée sur cette page avec sa date.</p>
+  <h2>Contact</h2>
+  <p>Pour toute question, ouvre un ticket sur <a href="https://github.com/rafargb-tech/asistente-trimado/issues">github.com/rafargb-tech/asistente-trimado</a>.</p>
+  <p class="date">Dernière mise à jour : 24 novembre 2026</p>
+</section>
+</main>
+<script>
+(function(){
+  var secs=document.querySelectorAll('section[lang]'),btns=document.querySelectorAll('nav button');
+  function set(l){
+    secs.forEach(function(s){s.hidden=s.lang!==l;if(s.lang===l){document.getElementById('title').textContent=s.dataset.t;document.title=s.dataset.t;}});
+    btns.forEach(function(b){b.setAttribute('aria-pressed',b.dataset.l===l?'true':'false');});
+    document.documentElement.lang=l;
+  }
+  btns.forEach(function(b){b.onclick=function(){set(b.dataset.l);};});
+  var q=(location.hash||'').slice(1),n=(navigator.language||'es').slice(0,2);
+  set(['es','en','fr'].indexOf(q)>-1?q:(['es','en','fr'].indexOf(n)>-1?n:'en'));
+})();
+</script>
+</body>
+</html>

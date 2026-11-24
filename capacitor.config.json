@@ -1,0 +1,12 @@
+{
+  "appId": "com.soyrgb.trimado",
+  "appName": "Trimado",
+  "webDir": "www",
+  "backgroundColor": "#0D161B",
+  "android": { "backgroundColor": "#0D161B" },
+  "ios": { "backgroundColor": "#0D161B", "contentInset": "never" },
+  "plugins": {
+    "SplashScreen": { "launchShowDuration": 600, "launchAutoHide": true, "backgroundColor": "#0D161B", "showSpinner": false },
+    "StatusBar": { "overlaysWebView": false }
+  }
+}

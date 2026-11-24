@@ -1,7 +1,7 @@
 // Asistente de Trimado: funciona sin conexión.
 // La página va "red primero" (si hay cobertura, siempre la última versión; si no, la guardada).
 // Fuentes, iconos y manifest van "caché primero".
-const CACHE = 'trimado-v3.6';
+const CACHE = 'trimado-v3.7';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icons/icon.svg', './icons/icon-192.png', './icons/icon-512.png',
   './icons/maskable-512.png', './icons/apple-touch-icon.png', './icons/favicon-32.png',
   './fonts/ibm-plex-sans-latin-400-normal.woff2', './fonts/ibm-plex-sans-latin-500-normal.woff2', './fonts/ibm-plex-sans-latin-600-normal.woff2',
