@@ -1,6 +1,6 @@
 {
   "name": "asistente-trimado",
-  "version": "3.9.0",
+  "version": "4.0.0",
   "private": true,
   "description": "Asistente de Trimado: app nativa (Capacitor) a partir de la web de src/",
   "scripts": {

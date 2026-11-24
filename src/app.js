@@ -461,11 +461,11 @@ function renderBoats(){
 })();
 
 /* ---------- Secciones ---------- */
-const VIEWS=['trimado','problema','barcos'];
+const VIEWS=['trimado','problema','barcos','polar'];
 function route(){
   const h=(location.hash||'').replace('#',''), v=VIEWS.includes(h)?h:'trimado';
   VIEWS.forEach(x=>{$('v-'+x).hidden=x!==v;});
-  document.querySelectorAll('.tablist a').forEach(a=>{if(a.dataset.view===v)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');});
+  document.querySelectorAll('.tablist a').forEach(a=>{if(a.dataset.view===(v==='polar'?'trimado':v))a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');});
 }
 window.addEventListener('hashchange',()=>{route();window.scrollTo(0,0);});
 
@@ -604,7 +604,7 @@ async function sayList(btn,parts){ // parts: [{text, el?: ()=>Element}]
   for(const p of parts){
     if(run!==sayRun) return;
     const el=p.el&&p.el(); document.querySelectorAll('.speaking').forEach(e=>e.classList.remove('speaking'));
-    if(el){el.classList.add('speaking'); el.scrollIntoView({block:'nearest',behavior:'smooth'});}
+    if(el){el.classList.add('speaking'); if(el.dataset&&el.dataset.k&&typeof selectCtl==='function') selectCtl(el.dataset.k); el.scrollIntoView({block:'nearest',behavior:'smooth'});}
     await sayOne(sayClean(p.text));
     if(run!==sayRun) return;
     await new Promise(r=>setTimeout(r,p.pause||350));
@@ -744,7 +744,7 @@ function diagnoseTT(){
 const STATIC=[];
 (function collect(){
   const skip=new Set(['SCRIPT','STYLE','SVG','svg']);
-  const dyn=new Set(['r-ang','r-zone','r-amura','r-zdesc','o-awa','o-tws','o-tws2','polar-ctx','trim-ctx','ctx-boat','ctx-now','save-state','store-note','boat-list','boat-sel','checklist','understood','chips','tt-g','tt-m','tt-out','reefbox','t-mayor','t-genova','k-target','k-target-s','k-beat','k-beat-s','k-run','k-run-s','perf-txt','polar-note','cl-title','cl-why','cl-prog','omitted','b-warn','tg-mayor','tg-genova','rumbos','save-boat','perf-go','langs','how']);
+  const dyn=new Set(['r-ang','r-zone','r-amura','r-zdesc','o-awa','o-tws','o-tws2','polar-ctx','trim-ctx','ctx-boat','ctx-now','save-state','store-note','boat-list','boat-sel','checklist','understood','chips','tt-g','tt-m','tt-out','reefbox','t-mayor','t-genova','k-target','k-target-s','k-beat','k-beat-s','k-run','k-run-s','perf-txt','polar-note','cl-title','cl-why','cl-prog','omitted','b-warn','tg-mayor','tg-genova','rumbos','save-boat','perf-go','langs','how','r-tws','r-band','pl-target','gauges','boat']);
   function walk(el){
     if(el.tagName==='svg'){const v=el.getAttribute('aria-label'); if(v) STATIC.push({el,attr:'aria-label',key:v}); return;}
     if(skip.has(el.tagName)||dyn.has(el.id)) return;
@@ -801,21 +801,101 @@ $('how').addEventListener('click',e=>{if(e.target===$('how'))closeHow();});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&howState)closeHow();});
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('.howbtn'); if(b){e.preventDefault();openHow(b.dataset.how);}});
 
+
+/* ---------- Vista del barco (maqueta v4) ---------- */
+S.sel=null;
+const BAND_N={light:'Suave',med:'Medio',fresh:'Fresco',strong:'Fuerte'};
+// posición recomendada: -1 sotavento/atrás · +1 barlovento/adelante
+function carroPos(){const z=zone(S.awa).k,bd=band(S.tws).k,hard=bd==='fresh'||bd==='strong';
+  if(z!=='cenida') return -1; return bd==='light'?0.55:hard?-0.45:0;}
+function escoteroPos(){const z=zone(S.awa).k,bd=band(S.tws).k,hard=bd==='fresh'||bd==='strong';
+  if(['traves','largo','popa','desc'].includes(z)) return 0.85; return bd==='light'?0.45:hard?-0.6:0;}
+function reefNeed(){const m=mode(S.awa),R=REEF[m],x=S.tws; return Math.min(S.cfg.rizos, x>=R[2]?3:x>=R[1]?2:x>=R[0]?1:0);}
+function drawBoat(){
+  const c=S.cfg, svg=$('boat'), sel=S.sel, fr=c.rig==='fraccionado';
+  const mastX=176, deckY=184, top=22, fsY=fr?52:top, bowX=318, sternX=46;
+  const boomY=158, clewX=70;
+  const nR=reefNeed();
+  const lead=escoteroPos(); const leadX=144+lead*14;
+  const gClew={x:150,y:174};
+  const on=k=>sel===k?' on':'';
+  const K=(k,inner,hit)=>`<g class="k${on(k)}" data-k="${k}">${inner}<path class="hit" d="${hit}"/></g>`;
+  let s='<g class="grid">';
+  for(let x=0;x<=360;x+=24) s+=`<line x1="${x}" y1="0" x2="${x}" y2="250"/>`;
+  for(let y=10;y<=250;y+=24) s+=`<line x1="0" y1="${y}" x2="360" y2="${y}"/>`;
+  s+='</g>';
+  s+=`<path class="sea" d="M0 206 q15 -4 30 0 t30 0 t30 0 t30 0 t30 0 t30 0 t30 0 t30 0 t30 0 t30 0 t30 0 t30 0"/>`;
+  // casco
+  s+=`<path class="hull" d="M${sternX} ${deckY} L${bowX} ${deckY-4} Q${bowX-10} 202 ${bowX-40} 206 L${sternX+18} 206 Q${sternX+2} 200 ${sternX} ${deckY}Z"/>`;
+  s+=`<path class="hull" d="M196 206 L204 236 L222 236 L220 206Z"/><path class="hull" d="M66 206 L62 228 L72 228 L78 206Z"/>`;
+  s+=`<path class="hull" d="M90 ${deckY} L96 176 L132 176 L136 ${deckY}Z"/>`;
+  // jarcia
+  s+=`<path class="wire" d="M${mastX} ${fsY} L${bowX-4} ${deckY-4}"/>`;
+  // velas
+  const head={x:mastX-2,y:top+6};
+  const mainPath=`M${mastX-2} ${boomY-2} L${head.x} ${head.y} Q${(head.x+clewX)/2-6} ${(head.y+boomY)/2} ${clewX+2} ${boomY-3} Z`;
+  s+=`<path class="sail" d="${mainPath}"/>`;
+  // rizos: franjas a 14 %, 28 %, 42 % de la altura del grátil
+  for(let i=1;i<=Math.min(3,c.rizos);i++){
+    const f=i*0.14, yL=boomY-2-(boomY-2-head.y)*f, xR=clewX+2+(head.x-clewX)*f*0.9, yR=boomY-3-(boomY-3-head.y)*f;
+    const need=i===nR;
+    if(need) s+=`<path class="cut" d="M${mastX-2} ${boomY-2} L${mastX-2} ${yL} L${xR} ${yR} L${clewX+2} ${boomY-3}Z"/>`;
+    s+=`<path class="reef${i<=nR?' need':''}" d="M${mastX-2} ${yL} L${xR} ${yR}"/>`;
+    if(need) s+=`<text class="on" x="${xR-4}" y="${yR-5}" text-anchor="end">${t('{o} rizo',{o:ord(i)})}</text>`;
+  }
+  const gHead={x:mastX+(fr?4:2),y:fsY+8};
+  s+=`<path class="sail g" d="M${bowX-8} ${deckY-6} L${gHead.x} ${gHead.y} Q${gClew.x+2} ${(gHead.y+gClew.y)/2+6} ${gClew.x} ${gClew.y} Z"/>`;
+  // palo y botavara
+  s+=`<path class="spar" d="M${mastX} ${deckY} L${mastX} ${top}"/><path class="spar" d="M${mastX} ${boomY} L${clewX-4} ${boomY+1}"/>`;
+  // controles
+  if(c.backstay) s+=K('backstay',`<path class="ctl" d="M${mastX} ${top} L${sternX+4} ${deckY-1}"/>`,`M${mastX} ${top} L${sternX+4} ${deckY-1}`);
+  else s+=`<path class="wire" d="M${mastX} ${top} L${sternX+4} ${deckY-1}"/>`;
+  s+=K('escota_mayor',`<path class="ctl" d="M100 ${boomY+1} L100 ${deckY-8} M108 ${boomY+1} L104 ${deckY-8}"/>`,`M102 ${boomY} L102 ${deckY-8}`);
+  if(c.carro) s+=K('carro',`<path class="ctl" d="M90 ${deckY-8} L118 ${deckY-8}"/><rect class="ctl dot" x="${101-carroPos()*10}" y="${deckY-11}" width="6" height="6" rx="1"/>`,`M90 ${deckY-8} L118 ${deckY-8}`);
+  if(c.contra) s+=K('contra',`<path class="ctl" d="M${mastX-30} ${boomY+1} L${mastX-3} ${deckY-6}"/>`,`M${mastX-30} ${boomY+1} L${mastX-3} ${deckY-6}`);
+  if(c.pujamen) s+=K('pujamen',`<path class="ctl" d="M${clewX+2} ${boomY-3} L${clewX-6} ${boomY+1}"/><circle class="ctl dot" cx="${clewX+2}" cy="${boomY-3}" r="2.6"/>`,`M${clewX+4} ${boomY-3} L${clewX-6} ${boomY+1}`);
+  s+=K('cunningham',`<path class="ctl" d="M${mastX-2} ${boomY-10} L${mastX-9} ${boomY-6} L${mastX-3} ${deckY-6}"/><circle class="ctl dot" cx="${mastX-2}" cy="${boomY-10}" r="2.4"/>`,`M${mastX-6} ${boomY-10} L${mastX-3} ${deckY-6}`);
+  s+=K('escota_genova',`<path class="ctl" d="M${gClew.x} ${gClew.y} L${leadX} ${deckY-2} L112 ${deckY-6}"/><circle class="ctl dot" cx="${gClew.x}" cy="${gClew.y}" r="2.4"/>`,`M${gClew.x} ${gClew.y} L${leadX} ${deckY-2} L112 ${deckY-6}`);
+  if(c.escotero) s+=K('escotero',`<path class="ctl" d="M128 ${deckY-1} L160 ${deckY-2}"/><rect class="ctl dot" x="${leadX-4}" y="${deckY-5}" width="8" height="5" rx="1"/>`,`M128 ${deckY-1} L160 ${deckY-2}`);
+  s+=K('driza_genova',`<path class="ctl" d="M${gHead.x} ${gHead.y} L${bowX-8} ${deckY-6}"/>`,`M${gHead.x} ${gHead.y} L${bowX-8} ${deckY-6}`);
+  if(c.enrollador) s+=K('enrollador',`<circle class="ctl" cx="${bowX-8}" cy="${deckY-4}" r="4"/>`,`M${bowX-14} ${deckY-4} L${bowX-2} ${deckY-4}`);
+  // rótulo del control seleccionado
+  const lab={escota_mayor:[96,deckY+14],carro:[104,deckY+12],contra:[mastX-36,boomY+18],pujamen:[clewX-6,boomY-10],cunningham:[mastX-14,boomY-16],backstay:[100,96],escota_genova:[gClew.x-6,gClew.y-8],escotero:[leadX,deckY+12],driza_genova:[(gHead.x+bowX)/2+10,(gHead.y+deckY)/2],enrollador:[bowX-8,deckY+12]};
+  if(sel&&lab[sel]&&svg.dataset) {
+    const li=document.querySelector(`.sail li[data-k="${sel}"]`);
+    if(li){const L=lab[sel]; s+=`<text class="on" x="${L[0]}" y="${L[1]}" text-anchor="middle">${li.dataset.c}</text>`;}
+  }
+  svg.innerHTML=s;
+  // reglas de posición
+  const z=zone(S.awa).k, G=[];
+  const gauge=(k,name,pos,l,r)=>`<div class="gauge${sel===k?' on':''}" data-k="${k}"><b>${t(name)}</b><div class="trk"><i style="left:${50+pos*46}%"></i></div><div class="ends"><span>${t(l)}</span><span>${t(r)}</span></div></div>`;
+  if(c.carro) G.push(gauge('carro','Carro',carroPos(),'Sotavento','Barlovento'));
+  if(c.escotero&&z!=='popa'&&z!=='proa') G.push(gauge('escotero','Escotero',escoteroPos(),'Atrás','Adelante'));
+  $('gauges').innerHTML=G.join('');
+}
+function selectCtl(k){S.sel=k||null; document.querySelectorAll('.sail li').forEach(li=>li.classList.toggle('sel',!!k&&li.dataset.k===k)); drawBoat();}
+document.addEventListener('click',e=>{
+  if(e.target.closest&&e.target.closest('.howbtn')) return;
+  const g=e.target.closest&&e.target.closest('#boat g.k, .gauge'); if(g){selectCtl(g.dataset.k===S.sel?null:g.dataset.k);return;}
+  const li=e.target.closest&&e.target.closest('.sail li'); if(li&&li.dataset.k) selectCtl(li.dataset.k===S.sel?null:li.dataset.k);
+});
+
 /* ---------- Render ---------- */
-function li(r){return `<li><span class="ctl">${r.c}${r.p?`<span class="part">${r.p}</span>`:''}</span><span class="val">${r.v}${r.alt?`<span class="alt">${r.alt}</span>`:''}</span>${r.how?howBtn(r.how):'<span></span>'}</li>`;}
+function li(r){return `<li data-k="${r.how||''}" data-c="${r.c}"><span class="ctl">${r.c}${r.p?`<span class="part">${r.p}</span>`:''}</span><span class="val">${r.v}${r.alt?`<span class="alt">${r.alt}</span>`:''}</span>${r.how?howBtn(r.how):'<span></span>'}</li>`;}
 function render(){
   const z=zone(S.awa);
-  $('awa').value=S.awa; $('o-awa').textContent=S.awa+'°'; $('tws').value=S.tws; $('o-tws').textContent=S.tws+' kn';
-  $('r-ang').textContent=S.awa+'°'; $('r-zone').textContent=z.n; $('r-zdesc').textContent=t('Ángulo real ≈ {a}°.',{a:Math.round(TA())})+' '+z.d;
+  $('awa').value=S.awa; $('o-awa').textContent=S.awa+'°'; $('tws').value=S.tws; $('o-tws').textContent=S.tws+' '+t('kn');
+  $('r-ang').textContent=S.awa+'°'; $('r-zone').textContent=z.n; $('r-tws').textContent=S.tws; $('r-band').textContent=t(BAND_N[band(S.tws).k]); $('r-zdesc').textContent=t('Ángulo real ≈ {a}°.',{a:Math.round(TA())})+' '+z.d;
   const am=$('r-amura'); am.className='amura '+S.side; am.textContent=t(S.side==='estribor'?'Amura de estribor':'Amura de babor');
   drawDial();
   const tr=trim(); $('t-mayor').innerHTML=tr.M.map(li).join(''); $('t-genova').innerHTML=tr.G.map(li).join('');
+  if(S.sel===null&&tr.M[0]) S.sel=tr.M[0].how||null; if(!document.querySelector(`.sail li[data-k="${S.sel}"]`)) S.sel=(tr.M[0]&&tr.M[0].how)||null; selectCtl(S.sel);
   $('trim-ctx').innerHTML=howKey();
   const ra=reefAdvice(); $('reefbox').innerHTML=`<strong>${ra.h}</strong><span>${ra.d}</span>${S.cfg.rizos>0?howBtn('rizo'):''}`;
   document.querySelectorAll('#chips .chip').forEach(c=>c.setAttribute('aria-pressed',c.dataset.k===S.problem?'true':'false'));
   renderUnderstood();
   renderChecklist();
-  renderPolar();
+  renderPolar(); $('pl-target').textContent=$('k-target').textContent;
   renderTT();
   renderCtx();
   renderBoats();

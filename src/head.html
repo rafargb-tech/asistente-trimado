@@ -256,6 +256,57 @@ footer p{margin:0}
 @media (prefers-reduced-motion:reduce){body{transition:none}}
 
 
+
+/* ---- Prototipo v4.0: instrumentos, vista del barco ---- */
+.dial-wrap #dial{max-width:250px}
+.inst-row{display:grid;grid-template-columns:1fr 1fr;width:100%;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.inst{display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 4px 14px}
+.inst+.inst{border-left:1px solid var(--line)}
+.inst .lbl{font-size:13px;color:var(--muted)}
+.inst .big{font:500 54px/1 var(--f-mono);letter-spacing:-.04em;color:var(--accent)}
+.inst .big small{font:500 18px/1 var(--f-mono);letter-spacing:0;margin-left:4px;color:var(--ink)}
+.inst .zone{font-size:19px}
+.dial-wrap .amura{align-self:center}
+.boatview{margin:0 0 4px;display:flex;flex-direction:column;gap:10px}
+#boat{width:100%;height:auto;display:block;background:var(--surface);border:1px solid var(--line);border-radius:6px}
+#boat .grid line{stroke:var(--line);stroke-width:.6}
+#boat .sea{stroke:var(--sea);stroke-width:1;opacity:.55}
+#boat .hull{fill:var(--surface);stroke:var(--ink);stroke-width:1.4;stroke-linejoin:round}
+#boat .sail{fill:var(--surface);stroke:var(--ink);stroke-width:1.1;stroke-linejoin:round}
+#boat .sail.g{fill:var(--surface);fill-opacity:.92}
+#boat .seam{stroke:var(--line-strong);stroke-width:.6;fill:none}
+#boat .spar{stroke:var(--ink);stroke-width:2.6;stroke-linecap:round}
+#boat .wire{stroke:var(--muted);stroke-width:.9;fill:none}
+#boat .ctl{stroke:var(--muted);stroke-width:1.2;fill:none;stroke-linecap:round;transition:stroke .15s}
+#boat .ctl.dot{fill:var(--muted);stroke:none}
+#boat .hit{stroke:transparent;stroke-width:16;fill:none;cursor:pointer;pointer-events:stroke}
+#boat g.k.on .ctl{stroke:var(--accent);stroke-width:3;filter:drop-shadow(0 0 3px var(--accent))}
+#boat g.k.on .ctl.dot{fill:var(--accent);stroke:none}
+#boat .reef{stroke:var(--muted);stroke-width:.8;stroke-dasharray:2 3}
+#boat .reef.need{stroke:var(--accent);stroke-width:1.6;stroke-dasharray:none}
+#boat .cut{fill:var(--accent);fill-opacity:.13}
+#boat text{font:500 10.5px var(--f-body);fill:var(--muted)}
+#boat text.on{fill:var(--accent);font-weight:600}
+.gauges{display:grid;grid-template-columns:1fr 1fr;gap:10px 18px}
+.gauges:empty{display:none}
+.gauge{display:flex;flex-direction:column;gap:5px;font-size:13px}
+.gauge b{font-weight:600}
+.gauge .trk{position:relative;height:6px;border-radius:3px;background:var(--line)}
+.gauge .trk i{position:absolute;top:50%;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;background:var(--accent);border:2px solid var(--surface);box-shadow:0 0 0 1px var(--accent)}
+.gauge .trk::after{content:"";position:absolute;left:50%;top:-3px;bottom:-3px;width:1px;background:var(--line-strong)}
+.gauge .ends{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted)}
+.gauge.on b{color:var(--accent)}
+.sail li{cursor:pointer;border-radius:4px}
+.sail li.sel{background:var(--accent-soft);box-shadow:inset 3px 0 0 var(--accent);padding-left:8px;margin-left:-8px}
+
+/* Polar en pantalla aparte */
+.polar-link{display:flex;align-items:center;gap:10px;margin-top:4px;padding:12px 14px;border:1px solid var(--line);border-radius:6px;color:var(--ink);text-decoration:none;font-weight:600}
+.polar-link .pl-v{margin-left:auto;font-weight:400;color:var(--muted);font-size:14px}
+.polar-link .pl-v b{color:var(--ink);font:500 17px var(--f-mono);margin-left:4px}
+.polar-link svg,.back svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.polar-link:active{background:var(--sea-soft)}
+.subview{max-width:620px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+.back{display:inline-flex;align-items:center;gap:6px;color:var(--muted);text-decoration:none;font-weight:600;font-size:15px;align-self:flex-start;padding:6px 0}
 /* Lectura en voz alta */
 footer .credits{font-size:12px;margin-top:6px}
 .ttl{display:flex;align-items:center;gap:10px;min-width:0}
@@ -422,7 +473,7 @@ footer{max-width:none}
   <header class="appbar">
     <div class="brand">
       <svg class="mark" viewBox="0 0 34 34" aria-hidden="true"><path class="m3" d="M3 28.5c4 0 4-2 8-2s4 2 8 2 4-2 8-2 4 2 4 2"/><path class="m1" d="M16 3v21H6.5z"/><path class="m2" d="M18 6l9.5 18H18z"/></svg>
-      <div><h1>Asistente de Trimado</h1><span class="ver">Prototipo v3.9</span></div>
+      <div><h1>Asistente de Trimado</h1><span class="ver">Prototipo v4.0</span></div>
     </div>
     <div class="prefs">
       <div class="seg small langs" id="langs" role="group" aria-label="Idioma"><button type="button" data-v="es" lang="es">ES</button><button type="button" data-v="en" lang="en">EN</button><button type="button" data-v="fr" lang="fr">FR</button></div>
@@ -454,11 +505,11 @@ footer{max-width:none}
             <g id="d-sails"></g>
             <g id="d-windg"></g>
           </svg>
-          <div class="readout">
-            <span class="big" id="r-ang">45°</span>
-            <span class="zone" id="r-zone">Ceñida</span>
-            <span class="amura estribor" id="r-amura">Amura de estribor</span>
+          <div class="inst-row">
+            <div class="inst"><span class="lbl">Aparente</span><span class="big" id="r-ang">45°</span><span class="zone" id="r-zone">Ceñida</span></div>
+            <div class="inst"><span class="lbl">Real</span><span class="big"><span id="r-tws">15</span><small>kn</small></span><span class="zone" id="r-band">Medio</span></div>
           </div>
+          <span class="amura estribor" id="r-amura">Amura de estribor</span>
           <p class="zone-d" id="r-zdesc"></p>
         </div>
         <div class="slider">
@@ -471,8 +522,41 @@ footer{max-width:none}
           <input type="range" id="tws" min="0" max="40" step="1" value="15">
           <output id="o-tws">15 kn</output>
         </div>
+        <a class="polar-link" href="#polar"><span id="pl-lbl">Polar</span><span class="pl-v"><span id="pl-obj">Objetivo</span> <b id="pl-target">–</b></span><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3l5 5-5 5"/></svg></a>
       </section>
 
+      <section class="panel" aria-labelledby="h-trim">
+        <div class="panel-h"><div class="ttl"><h2 id="h-trim">Trimado para este rumbo</h2><button type="button" class="mini say" id="say-trim" aria-label="Leer en voz alta" aria-pressed="false" hidden><svg viewBox="0 0 16 16" aria-hidden="true"><path class="spk" d="M2.5 6h2.5l3.5-3v10l-3.5-3h-2.5z"/><path class="wav" d="M11 5.5a3.5 3.5 0 0 1 0 5M12.8 3.6a6 6 0 0 1 0 8.8"/><path class="stp" d="M5 5h6v6h-6z"/></svg></button></div><span class="meta" id="trim-ctx"></span></div>
+        <figure class="boatview"><svg id="boat" viewBox="0 0 360 250" role="img" aria-label="Barco con el control seleccionado"></svg><div class="gauges" id="gauges"></div></figure>
+        <div class="reefbox" id="reefbox"></div>
+        <div class="trim-grid">
+          <div class="sail"><h3>Mayor</h3><ul id="t-mayor"></ul></div>
+          <div class="sail"><h3>Génova</h3><ul id="t-genova"></ul></div>
+        </div>
+      </section>
+
+    </div>
+    <div class="col">
+
+      <section class="panel" aria-labelledby="h-tt">
+        <div class="panel-h"><h2 id="h-tt">Lanitas</h2></div>
+        <div class="tt-wrap">
+          <div class="tt-col">
+            <div><p class="subh">Génova · grátil</p><div class="tt-grid g" id="tt-g"></div></div>
+            <div><p class="subh">Mayor · baluma</p><div class="tt-grid m" id="tt-m"></div></div>
+            <button type="button" class="linkbtn" id="tt-reset">Restablecer</button>
+          </div>
+          <div class="tt-out" id="tt-out" aria-live="polite"></div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+  </div>
+
+  <div class="view" id="v-polar" hidden>
+    <div class="subview">
+      <a class="back" href="#trimado"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3 5 8l5 5"/></svg><span>Trimado</span></a>
       <section class="panel" aria-labelledby="h-polar">
         <div class="panel-h"><h2 id="h-polar">Polar estimada</h2><span class="meta" id="polar-ctx"></span></div>
         <div class="kpis">
@@ -498,29 +582,6 @@ footer{max-width:none}
         </details>
       </section>
     </div>
-    <div class="col">
-      <section class="panel" aria-labelledby="h-trim">
-        <div class="panel-h"><div class="ttl"><h2 id="h-trim">Trimado para este rumbo</h2><button type="button" class="mini say" id="say-trim" aria-label="Leer en voz alta" aria-pressed="false" hidden><svg viewBox="0 0 16 16" aria-hidden="true"><path class="spk" d="M2.5 6h2.5l3.5-3v10l-3.5-3h-2.5z"/><path class="wav" d="M11 5.5a3.5 3.5 0 0 1 0 5M12.8 3.6a6 6 0 0 1 0 8.8"/><path class="stp" d="M5 5h6v6h-6z"/></svg></button></div><span class="meta" id="trim-ctx"></span></div>
-        <div class="reefbox" id="reefbox"></div>
-        <div class="trim-grid">
-          <div class="sail"><h3>Mayor</h3><ul id="t-mayor"></ul></div>
-          <div class="sail"><h3>Génova</h3><ul id="t-genova"></ul></div>
-        </div>
-      </section>
-
-      <section class="panel" aria-labelledby="h-tt">
-        <div class="panel-h"><h2 id="h-tt">Lanitas</h2></div>
-        <div class="tt-wrap">
-          <div class="tt-col">
-            <div><p class="subh">Génova · grátil</p><div class="tt-grid g" id="tt-g"></div></div>
-            <div><p class="subh">Mayor · baluma</p><div class="tt-grid m" id="tt-m"></div></div>
-            <button type="button" class="linkbtn" id="tt-reset">Restablecer</button>
-          </div>
-          <div class="tt-out" id="tt-out" aria-live="polite"></div>
-        </div>
-      </section>
-    </div>
-  </div>
   </div>
 
   <div class="view" id="v-problema" hidden>

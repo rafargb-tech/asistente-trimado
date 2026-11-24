@@ -6,7 +6,7 @@ Guía para quien publica con su cuenta de desarrollador. El código está listo;
 |---|---|
 | Nombre en la tienda | **Trimado** (propuesta; confirmar disponibilidad) |
 | Identificador (bundle ID / applicationId) | `com.soyrgb.trimado` — **confirmar antes de la primera subida; luego no se puede cambiar** |
-| Versión | 3.9 (build / versionCode 39) |
+| Versión | 4.0 (build / versionCode 40) |
 | Política de privacidad | https://rafargb-tech.github.io/asistente-trimado/privacy.html |
 | Recoge datos | No |
 | Permisos | Ubicación «mientras se usa» (solo al pulsar GPS), vibración |
