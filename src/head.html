@@ -255,6 +255,17 @@ footer p{margin:0}
 .d-arrowhead{fill:var(--accent)}
 @media (prefers-reduced-motion:reduce){body{transition:none}}
 
+
+/* Lectura en voz alta */
+.ttl{display:flex;align-items:center;gap:10px;min-width:0}
+.mini.say{width:30px;height:30px;padding:0;display:grid;place-items:center;flex:0 0 auto}
+.panel-h:has(.ttl),.cl-head:has(.ttl){align-items:center}
+.mini.say svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linejoin:round;stroke-linecap:round}
+.mini.say .stp{display:none;fill:currentColor;stroke:none}
+.mini.say[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.mini.say[aria-pressed="true"] .spk,.mini.say[aria-pressed="true"] .wav{display:none}
+.mini.say[aria-pressed="true"] .stp{display:block}
+.speaking{outline:2px solid var(--accent,#C2185B);outline-offset:3px;border-radius:6px}
 /* Funciones nativas */
 .mini.gps{display:inline-flex;align-items:center;gap:6px;height:42px;align-self:flex-end}
 .mini.gps svg,.mini.awake svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.5}
@@ -410,7 +421,7 @@ footer{max-width:none}
   <header class="appbar">
     <div class="brand">
       <svg class="mark" viewBox="0 0 34 34" aria-hidden="true"><path class="m3" d="M3 28.5c4 0 4-2 8-2s4 2 8 2 4-2 8-2 4 2 4 2"/><path class="m1" d="M16 3v21H6.5z"/><path class="m2" d="M18 6l9.5 18H18z"/></svg>
-      <div><h1>Asistente de Trimado</h1><span class="ver">Prototipo v3.7</span></div>
+      <div><h1>Asistente de Trimado</h1><span class="ver">Prototipo v3.8</span></div>
     </div>
     <div class="prefs">
       <div class="seg small langs" id="langs" role="group" aria-label="Idioma"><button type="button" data-v="es" lang="es">ES</button><button type="button" data-v="en" lang="en">EN</button><button type="button" data-v="fr" lang="fr">FR</button></div>
@@ -488,7 +499,7 @@ footer{max-width:none}
     </div>
     <div class="col">
       <section class="panel" aria-labelledby="h-trim">
-        <div class="panel-h"><h2 id="h-trim">Trimado para este rumbo</h2><span class="meta" id="trim-ctx"></span></div>
+        <div class="panel-h"><div class="ttl"><h2 id="h-trim">Trimado para este rumbo</h2><button type="button" class="mini say" id="say-trim" aria-label="Leer en voz alta" aria-pressed="false" hidden><svg viewBox="0 0 16 16" aria-hidden="true"><path class="spk" d="M2.5 6h2.5l3.5-3v10l-3.5-3h-2.5z"/><path class="wav" d="M11 5.5a3.5 3.5 0 0 1 0 5M12.8 3.6a6 6 0 0 1 0 8.8"/><path class="stp" d="M5 5h6v6h-6z"/></svg></button></div><span class="meta" id="trim-ctx"></span></div>
         <div class="reefbox" id="reefbox"></div>
         <div class="trim-grid">
           <div class="sail"><h3>Mayor</h3><ul id="t-mayor"></ul></div>
@@ -545,7 +556,7 @@ footer{max-width:none}
         <div class="understood" id="understood" aria-live="polite"></div>
         <div class="chips" id="chips" role="group" aria-label="O elige el problema"></div>
 
-        <div class="cl-head"><h3 id="cl-title">Checklist</h3><span class="progress" id="cl-prog"></span></div>
+        <div class="cl-head"><div class="ttl"><h3 id="cl-title">Checklist</h3><button type="button" class="mini say" id="say-cl" aria-label="Leer en voz alta" aria-pressed="false" hidden><svg viewBox="0 0 16 16" aria-hidden="true"><path class="spk" d="M2.5 6h2.5l3.5-3v10l-3.5-3h-2.5z"/><path class="wav" d="M11 5.5a3.5 3.5 0 0 1 0 5M12.8 3.6a6 6 0 0 1 0 8.8"/><path class="stp" d="M5 5h6v6h-6z"/></svg></button></div><span class="progress" id="cl-prog"></span></div>
         <p class="why" id="cl-why"></p>
         <ol class="checklist" id="checklist"></ol>
         <p class="omitted" id="omitted"></p>

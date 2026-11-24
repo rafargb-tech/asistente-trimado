@@ -6,10 +6,10 @@ Guía para quien publica con su cuenta de desarrollador. El código está listo;
 |---|---|
 | Nombre en la tienda | **Trimado** (propuesta; confirmar disponibilidad) |
 | Identificador (bundle ID / applicationId) | `com.soyrgb.trimado` — **confirmar antes de la primera subida; luego no se puede cambiar** |
-| Versión | 3.7 (build / versionCode 37) |
+| Versión | 3.8 (build / versionCode 38) |
 | Política de privacidad | https://rafargb-tech.github.io/asistente-trimado/privacy.html |
 | Recoge datos | No |
-| Permisos | Ubicación «mientras se usa» (solo al pulsar GPS), vibración |
+| Permisos | Ubicación «mientras se usa» (solo al pulsar GPS), vibración, síntesis de voz del sistema |
 | Idiomas | Español, inglés, francés |
 | Categoría sugerida | Deportes (secundaria: Navegación) |
 | Edad | 4+ / PEGI 3 · Todos |
@@ -59,7 +59,7 @@ Ya resuelto en el proyecto:
 
 **Notas para el revisor** (campo *App Review Information → Notes*), útil frente a la regla 4.2:
 
-> Trimado is an offline sail-trim assistant. It works without network. Native features: GPS speed over ground compared to the boat's polar (tap "GPS" next to the speed field), keep-screen-awake while sailing (phone icon at the top), haptic feedback on checklists. No account or login required.
+> Trimado is an offline sail-trim assistant. It works without network. Native features: GPS speed over ground compared to the boat's polar (tap "GPS" next to the speed field), keep-screen-awake while sailing (phone icon at the top), read-aloud of the trim and checklists in Spanish, English and French using the device voice (speaker icon next to each title), haptic feedback on checklists. No account or login required.
 
 ---
 
@@ -101,6 +101,7 @@ Trimado te dice cómo ajustar las velas para el viento que tienes y el barco que
 - «¿Qué te pasa?»: escribe «con 15 nudos me voy de orzada» y te da una lista de cambios en orden, hasta tomar rizos.
 - Ficha de tu barco: eslora y aparejo, y una polar estimada para saber si vas a la velocidad que toca. Con el GPS compara tu velocidad real.
 - «Cómo se hace»: esquemas de cada maniobra.
+- Lectura en voz alta del trimado y de la checklist, paso a paso, para no soltar el timón.
 - Funciona sin conexión, con pantalla siempre encendida y modo noche.
 - Sin cuentas, sin anuncios y sin recoger datos.
 
@@ -120,6 +121,7 @@ Trimado tells you how to set your sails for the wind you have and the boat you s
 - "What's wrong?": type "15 knots and I keep rounding up" and get an ordered list of changes, up to reefing.
 - Your boat: length and rig, plus an estimated polar to check your speed. Compare with your real GPS speed.
 - "How to": diagrams for each adjustment.
+- Read-aloud of the trim and the checklist, step by step, so you keep your hands on the helm.
 - Works offline, keeps the screen on, night mode.
 - No accounts, no ads, no data collected.
 
@@ -139,6 +141,7 @@ Trimado t'indique comment régler tes voiles pour le vent du moment et ton batea
 - « Qu'est-ce qui ne va pas ? » : écris « 15 nœuds et je pars au lof » et obtiens une liste de changements dans l'ordre, jusqu'à la prise de ris.
 - Ton bateau : longueur et gréement, avec une polaire estimée. Compare avec ta vitesse GPS.
 - « Comment faire » : schémas pour chaque réglage.
+- Lecture à voix haute du réglage et de la checklist, étape par étape, sans lâcher la barre.
 - Fonctionne hors ligne, écran toujours allumé, mode nuit.
 - Sans compte, sans pub, sans collecte de données.
 
