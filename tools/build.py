@@ -60,7 +60,8 @@ def web(native=False):
         www = os.path.join(ROOT, 'www'); import shutil
         shutil.rmtree(www, ignore_errors=True); os.makedirs(www)
         open(os.path.join(www, 'index.html'), 'w').write(out)
-        for d in ('fonts', 'icons'): shutil.copytree(os.path.join(ROOT, d), os.path.join(www, d))
+        for d in ('fonts', 'icons', 'voice'):
+            if os.path.isdir(os.path.join(ROOT, d)): shutil.copytree(os.path.join(ROOT, d), os.path.join(www, d))
         print('native v' + VERSION, len(out)); return
     out = head + body + '\n' + sw + '</body>\n</html>\n'
     open(os.path.join(ROOT, 'index.html'), 'w').write(out)

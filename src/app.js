@@ -538,7 +538,51 @@ function sayClean(s){
   x=x.replace(/(\d)\s*kn\b/g,'$1 '+W[0]).replace(/(\d)\s*°/g,'$1 '+W[1]).replace(/≈\s*/g,W[2]+' ').replace(/(\d)\s*[–-]\s*(\d)/g,'$1'+W[3]+'$2').replace(/[·•]/g,', ');
   return x;
 }
-function sayOne(text){
+// Voz pregrabada: frases generadas de antemano en voice/<idioma>/ (sin conexión, nada sale del teléfono)
+const VOICE={}; let AUD=null, audDone=null;
+async function voiceIndex(l){
+  if(l in VOICE) return VOICE[l];
+  VOICE[l]=false;
+  if(location.protocol==='file:'&&!CAP) return false;
+  try{const r=await fetch('voice/'+l+'/index.json'); if(r.ok) VOICE[l]=await r.json();}catch(e){}
+  return VOICE[l];
+}
+const NUM_RE=/\d+(?:[.,]\d+)?/g;
+function sayUnits(x){return x.split(/(?<=[.!?])\s+/).map(s=>s.trim()).filter(s=>/[\p{L}\d]/u.test(s));}
+function clipsFor(M,s){
+  if(M.s[s]) return [M.s[s]];
+  if(!M.t[s.replace(NUM_RE,'#')]) return null;
+  const out=[];
+  for(const p of s.split(/(\d+(?:[.,]\d+)?)/)){const q=p.trim(); if(!/[\p{L}\d]/u.test(q)) continue; const f=/^\d/.test(q)?M.n[q]:M.f[q]; if(!f) return null; out.push(f);}
+  return out;
+}
+const SILENT='data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAIlYAAESsAAACABAAZGF0YQAAAAA=';
+function unlockAudio(){ // dentro del toque: deja el reproductor autorizado para lo que venga después
+  try{if(navigator.audioSession) navigator.audioSession.type='playback';}catch(e){}
+  if(!AUD){AUD=new Audio(); AUD.preload='auto';}
+  try{AUD.src=SILENT; const p=AUD.play(); if(p&&p.catch) p.catch(()=>{});}catch(e){}
+}
+let prevURL=null;
+async function playClip(url){
+  let src=url;
+  try{const r=await fetch(url); if(!r.ok) return; src=URL.createObjectURL(await r.blob());}catch(e){return;}
+  return new Promise(res=>{
+    if(prevURL){URL.revokeObjectURL(prevURL);} prevURL=src.startsWith('blob:')?src:null;
+    audDone=res; AUD.onended=AUD.onerror=()=>{audDone=null;res();};
+    AUD.src=src; const pr=AUD.play(); if(pr&&pr.catch) pr.catch(()=>{audDone=null;res();});
+  });
+}
+async function sayOne(text){
+  const M=await voiceIndex(S.lang), run=sayRun;
+  if(!M) return saySys(text);
+  for(const s of sayUnits(text)){
+    if(run!==sayRun) return;
+    const cl=clipsFor(M,s);
+    if(cl){for(const f of cl){if(run!==sayRun) return; await playClip('voice/'+S.lang+'/'+f);}}
+    else if(TTS||SYN) await saySys(s);
+  }
+}
+function saySys(text){
   return new Promise(res=>{
     if(TTS){TTS.speak({text,lang:TTS_LANG[S.lang]||'es-ES',rate:1.0,category:'playback'}).then(res,res);return;}
     const u=new SpeechSynthesisUtterance(text); u.lang=TTS_LANG[S.lang]||'es-ES';
@@ -548,13 +592,14 @@ function sayOne(text){
 }
 function sayStop(){
   sayRun++; try{if(TTS)TTS.stop().catch(()=>{});else if(SYN)SYN.cancel();}catch(e){}
+  try{if(AUD){AUD.pause();} if(audDone){const d=audDone;audDone=null;d();}}catch(e){}
   document.querySelectorAll('.speaking').forEach(e=>e.classList.remove('speaking'));
   document.querySelectorAll('.mini.say').forEach(b=>{b.setAttribute('aria-pressed','false');b.setAttribute('aria-label',t('Leer en voz alta'));});
   sayBtn=null;
 }
 async function sayList(btn,parts){ // parts: [{text, el?: ()=>Element}]
   if(sayBtn===btn){sayStop();return;}
-  sayStop(); const run=++sayRun; sayBtn=btn; tap();
+  sayStop(); const run=++sayRun; sayBtn=btn; tap(); unlockAudio();
   btn.setAttribute('aria-pressed','true'); btn.setAttribute('aria-label',t('Parar lectura'));
   for(const p of parts){
     if(run!==sayRun) return;
@@ -566,26 +611,30 @@ async function sayList(btn,parts){ // parts: [{text, el?: ()=>Element}]
   }
   if(run===sayRun) sayStop();
 }
-function sayTrim(){
+function trimParts(){
   const z=zone(S.awa), tr=trim(), ra=reefAdvice(), parts=[];
   parts.push({text:z.n+'. '+t('Viento aparente {a}°, {w} kn.',{a:S.awa,w:S.tws}),pause:500});
   if(ra&&ra.h) parts.push({text:ra.h+'. '+(ra.d||''),el:()=>$('reefbox'),pause:500});
   const row=(r,ul,i)=>({text:r.c+'. '+r.v+(r.alt?'. '+r.alt:''),el:()=>$(ul).children[i]});
   if(tr.M.length){parts.push({text:t('Mayor'),pause:200}); tr.M.forEach((r,i)=>parts.push(row(r,'t-mayor',i)));}
   if(tr.G.length){parts.push({text:t('Génova'),pause:200}); tr.G.forEach((r,i)=>parts.push(row(r,'t-genova',i)));}
-  sayList($('say-trim'),parts);
+  return parts;
 }
-function sayChecklist(){
-  const p=S.problem; if(!p) return;
+function sayTrim(){sayList($('say-trim'),trimParts());}
+function clParts(p,all){
   const list=steps(p).filter(s=>s.need(S.cfg)), parts=[{text:pName(p)+'.',pause:400}];
   let n=0;
-  list.forEach((s,i)=>{ if(S.done[p+'-'+i]) return; n++;
+  list.forEach((s,i)=>{ if(!all&&S.done[p+'-'+i]) return; n++;
     parts.push({text:t('Paso {n}.',{n})+' '+s.t+'. '+s.d,el:()=>{const c=$('ck-'+p+'-'+i);return c&&c.closest('li');},pause:900});});
   if(!n) parts.push({text:t('Todo hecho.')});
-  sayList($('say-cl'),parts);
+  return parts;
 }
+function sayChecklist(){if(S.problem) sayList($('say-cl'),clParts(S.problem));}
+// Herramienta interna para extraer todas las frases habladas (solo con ?corpus)
+if(/[?&]corpus\b/.test(location.search)) window.__corpus={S,trimParts,clParts,PROBLEMS,sayClean,sayUnits};
 if(TTS||SYN){['say-trim','say-cl'].forEach(id=>$(id).hidden=false); $('say-trim').onclick=sayTrim; $('say-cl').onclick=sayChecklist;
   if(SYN&&!TTS) SYN.getVoices();
+  voiceIndex(S.lang);
   document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&!CAP)sayStop();});}
 
 

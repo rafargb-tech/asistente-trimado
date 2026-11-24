@@ -6,10 +6,10 @@ Guía para quien publica con su cuenta de desarrollador. El código está listo;
 |---|---|
 | Nombre en la tienda | **Trimado** (propuesta; confirmar disponibilidad) |
 | Identificador (bundle ID / applicationId) | `com.soyrgb.trimado` — **confirmar antes de la primera subida; luego no se puede cambiar** |
-| Versión | 3.8 (build / versionCode 38) |
+| Versión | 3.9 (build / versionCode 39) |
 | Política de privacidad | https://rafargb-tech.github.io/asistente-trimado/privacy.html |
 | Recoge datos | No |
-| Permisos | Ubicación «mientras se usa» (solo al pulsar GPS), vibración, síntesis de voz del sistema |
+| Permisos | Ubicación «mientras se usa» (solo al pulsar GPS), vibración |
 | Idiomas | Español, inglés, francés |
 | Categoría sugerida | Deportes (secundaria: Navegación) |
 | Edad | 4+ / PEGI 3 · Todos |
@@ -59,7 +59,7 @@ Ya resuelto en el proyecto:
 
 **Notas para el revisor** (campo *App Review Information → Notes*), útil frente a la regla 4.2:
 
-> Trimado is an offline sail-trim assistant. It works without network. Native features: GPS speed over ground compared to the boat's polar (tap "GPS" next to the speed field), keep-screen-awake while sailing (phone icon at the top), read-aloud of the trim and checklists in Spanish, English and French using the device voice (speaker icon next to each title), haptic feedback on checklists. No account or login required.
+> Trimado is an offline sail-trim assistant. It works without network. Native features: GPS speed over ground compared to the boat's polar (tap "GPS" next to the speed field), keep-screen-awake while sailing (phone icon at the top), read-aloud of the trim and checklists in Spanish, English and French with bundled offline neural voice recordings (speaker icon next to each title), haptic feedback on checklists. No account or login required.
 
 ---
 
@@ -160,6 +160,7 @@ Rafa puede generarlas desde la versión web en los tamaños exactos si se las pi
 ## 6. Nuevas versiones
 
 1. Cambiar «Prototipo vX.Y» en `src/head.html` (la app toma la versión de ahí).
+   Si cambian textos que se leen en voz alta: `node tools/voice-corpus.js` y `python3 tools/voice.py` (regenera solo los audios nuevos en `voice/`).
 2. Subir `versionCode` y `versionName` en `android/app/build.gradle`, y *Version* y *Build* en Xcode.
 3. `npm run sync`, compilar y subir igual que arriba.
 
@@ -172,4 +173,5 @@ www/                 salida para Capacitor (no se versiona)
 android/  ios/       proyectos nativos
 assets/              icono y splash de origen (npx capacitor-assets generate)
 privacy.html         política de privacidad publicada en GitHub Pages
+voice/               audios pregrabados (voces Piper davefx/joe CC0, SIWIS CC BY 4.0)
 ```
