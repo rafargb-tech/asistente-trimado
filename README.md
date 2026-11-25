@@ -1,6 +1,6 @@
 # Asistente de Trimado
 
-Herramienta de trimado de velas para cruceros. Prototipo.
+Herramienta de trimado de velas para cruceros.
 
 - Trimado de mayor y génova según rumbo, viento y el equipo de tu barco.
 - Diagnóstico por lanitas (catavientos).

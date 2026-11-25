@@ -159,7 +159,7 @@ Rafa puede generarlas desde la versión web en los tamaños exactos si se las pi
 
 ## 6. Nuevas versiones
 
-1. Cambiar «Prototipo vX.Y» en `src/head.html` (la app toma la versión de ahí).
+1. Cambiar «vX.Y» (etiqueta `class="ver"`) en `src/head.html` (la app toma la versión de ahí).
    Si cambian textos que se leen en voz alta: `node tools/voice-corpus.js` y `python3 tools/voice.py` (regenera solo los audios nuevos en `voice/`).
 2. Subir `versionCode` y `versionName` en `android/app/build.gradle`, y *Version* y *Build* en Xcode.
 3. `npm run sync`, compilar y subir igual que arriba.

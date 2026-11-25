@@ -7,7 +7,7 @@
 import json, os, re, sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(ROOT, 'src')
-VERSION = re.search(r'Prototipo v([\d.]+)', open(os.path.join(SRC, 'head.html')).read()).group(1)
+VERSION = re.search(r'class="ver">v([\d.]+)<', open(os.path.join(SRC, 'head.html')).read()).group(1)
 
 def page():
     h = open(os.path.join(SRC, 'head.html')).read()
